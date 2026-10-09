@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include <imgui.h>
-#include <sstream>
 
 #include "../external/imgui/backends/imgui_impl_sdl3.h"
 #include "../external/imgui/backends/imgui_impl_opengl3.h"
@@ -18,9 +17,12 @@
 #include "texture.hpp"
 #include "mesh.hpp"
 #include "scene_object.hpp"
+#include "event_system.hpp"
 
 int main() {
     SDL_Init(SDL_INIT_VIDEO);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     SDL_Window *window = SDL_CreateWindow("House generator", 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE  );
     SDL_GLContext context = SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(0);
@@ -65,6 +67,7 @@ int main() {
     };
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
 
     auto vert = std::vector(vertices, vertices + 16);
     auto ind = std::vector(indices, indices + 24);
@@ -80,19 +83,16 @@ int main() {
     float angle = 0.0f;
     glm::vec3 cameraPos = glm::vec3(0, 1, 8);
     glm::vec3 modelPos = glm::vec3(0, 0, 0);
-    camera.SetPosition(cameraPos);
 
-    bool running = true;
+    EventSystem eventSystem;
+
     auto lastFrame = SDL_GetTicksNS();
+    bool running = true;
+    eventSystem.RegisterEvent(SDL_EVENT_QUIT, [&running](auto&&){running = false;});
+    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [](const SDL_Event *event){std::cout << "test " << event->type << std::endl;});
 
     while (running) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT) {
-                running = false;
-            }
-        }
+        eventSystem.ProcessEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
@@ -111,20 +111,11 @@ int main() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto identity = glm::identity<glm::mat4>();
 
         modelPos.y = glm::sin(SDL_GetTicks() / 250.0f) / 2 + 0.5f;
+        object.SetPosition(modelPos);
+        // object.SetRotation(glm::vec3(0,SDL_GetTicks() / 15.0f,0));
 
-        // auto model = glm::translate(identity, modelPos) * glm::rotate(identity, SDL_GetTicks() / 500.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        // shader.SetMatrix4x4("model", model);
-
-        // auto camera = glm::inverse(glm::translate(identity, cameraPos));
-        // shader.SetMatrix4x4("camera", camera);
-
-        // glm::mat4 projection_matrix = glm::perspective(glm::radians(60 / 2.0), 16.0 / 9.0, 0.1, 100.0);
-        // shader.SetMatrix4x4("view", projection_matrix * camera);
-
-        // mesh.Draw();
         camera.SetPosition(cameraPos);
         camera.LookAt(glm::vec3(0,0,0));
         object.Draw(camera);

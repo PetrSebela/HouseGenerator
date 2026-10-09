@@ -33,8 +33,13 @@ void SceneObject::SetScale(glm::vec3 scale) {
 
 void SceneObject::Draw(Camera camera) {
     _shader.Bind();
-    // _shader.SetMatrix4x4("model", _modelMatrix);
-    _shader.SetMatrix4x4("model", glm::identity<glm::mat4x4>());
+
+    // for (int i = 0; i < _mesh.vertices.size(); i++) {
+    //     for (
+    //         )
+    // }
+    _shader.SetMatrix4x4("model", _modelMatrix);
+    // _shader.SetMatrix4x4("model", glm::identity<glm::mat4x4>());
 
 
     auto c = glm::inverse(glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(0,0,5.0f)));
