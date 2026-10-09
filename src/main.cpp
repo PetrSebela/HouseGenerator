@@ -14,53 +14,10 @@
 
 #include <SDL3/SDL.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "../external/stb_image.h"
-
-
-struct vertex {
-    glm::vec3 position;
-    glm::vec3 color;
-    glm::vec2 UV;
-};
-
-GLuint loadShader(std::string path, GLuint shader_type) {
-    std::ifstream vertexShaderFile(path);
-    std::stringstream buffer;
-    buffer << vertexShaderFile.rdbuf();
-    std::string source = buffer.str();
-    const char* sources[] = { source.c_str() };
-    GLuint shader = glCreateShader(shader_type);
-    glShaderSource(shader, 1, sources, nullptr);
-    glCompileShader(shader);
-
-    int  success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if(!success)
-    {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    return shader;
-}
-
-GLuint loadProgram() {
-    auto vertexShader = loadShader("../assets/vert.vert", GL_VERTEX_SHADER);
-    auto fragmentShader = loadShader("../assets/frag.frag", GL_FRAGMENT_SHADER);
-    auto program = glCreateProgram();
-
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    return program;
-}
-
-
+#include "shader.hpp"
+#include "texture.hpp"
+#include "mesh.hpp"
+#include "scene_object.hpp"
 
 int main() {
     SDL_Init(SDL_INIT_VIDEO);
@@ -74,30 +31,27 @@ int main() {
     ImGui_ImplSDL3_InitForOpenGL(window, context);
     ImGui_ImplOpenGL3_Init();
 
-    vertex vertices[] = {
-        // Front
-        vertex{glm::vec3(-1,0,-1),glm::vec3(0,0,0), glm::vec2(0,0) },
-        vertex{glm::vec3(1,0,-1),glm::vec3(0,0,0), glm::vec2(1,0) },
-        vertex{glm::vec3(-1,2,-1), glm::vec3(0,0,0), glm::vec2(0,1) },
-        vertex{glm::vec3(1,2,-1), glm::vec3(0,0,0), glm::vec2(1,1) },
+    Vertex vertices[] = {
+        Vertex{glm::vec3(-1,0,-1),glm::vec3(0,0,0), glm::vec2(0,0) },
+        Vertex{glm::vec3(1,0,-1),glm::vec3(0,0,0), glm::vec2(1,0) },
+        Vertex{glm::vec3(-1,2,-1), glm::vec3(0,0,0), glm::vec2(0,1) },
+        Vertex{glm::vec3(1,2,-1), glm::vec3(0,0,0), glm::vec2(1,1) },
 
-        //Back
-        vertex{glm::vec3(-1,0,1),glm::vec3(0,0,0), glm::vec2(0,0) },
-        vertex{glm::vec3(1,0,1),glm::vec3(0,0,0), glm::vec2(1,0) },
-        vertex{glm::vec3(-1,2,1), glm::vec3(0,0,0), glm::vec2(0,1) },
-        vertex{glm::vec3(1,2,1), glm::vec3(0,0,0), glm::vec2(1,1) },
+        Vertex{glm::vec3(-1,0,1),glm::vec3(0,0,0), glm::vec2(0,0) },
+        Vertex{glm::vec3(1,0,1),glm::vec3(0,0,0), glm::vec2(1,0) },
+        Vertex{glm::vec3(-1,2,1), glm::vec3(0,0,0), glm::vec2(0,1) },
+        Vertex{glm::vec3(1,2,1), glm::vec3(0,0,0), glm::vec2(1,1) },
 
-        vertex{glm::vec3(1,0,-1), glm::vec3(1,1,1), glm::vec2(0,0) },
-        vertex{glm::vec3(1,0,1), glm::vec3(0,1,0), glm::vec2(1,0) },
-        vertex{glm::vec3(1,2,-1),glm::vec3(0,0,1), glm::vec2(0,1) },
-        vertex{glm::vec3(1,2,1), glm::vec3(1,0,0), glm::vec2(1,1) },
+        Vertex{glm::vec3(1,0,-1), glm::vec3(1,1,1), glm::vec2(0,0) },
+        Vertex{glm::vec3(1,0,1), glm::vec3(0,1,0), glm::vec2(1,0) },
+        Vertex{glm::vec3(1,2,-1),glm::vec3(0,0,1), glm::vec2(0,1) },
+        Vertex{glm::vec3(1,2,1), glm::vec3(1,0,0), glm::vec2(1,1) },
 
-        vertex{glm::vec3(-1,0,1), glm::vec3(1,1,1), glm::vec2(0,0) },
-        vertex{glm::vec3(-1,0,-1), glm::vec3(1,0,0), glm::vec2(1,0) },
-        vertex{glm::vec3(-1,2,1), glm::vec3(0,1,0), glm::vec2(0,1) },
-        vertex{glm::vec3(-1,2,-1),glm::vec3(0,0,1), glm::vec2(1,1) },
+        Vertex{glm::vec3(-1,0,1), glm::vec3(1,1,1), glm::vec2(0,0) },
+        Vertex{glm::vec3(-1,0,-1), glm::vec3(1,0,0), glm::vec2(1,0) },
+        Vertex{glm::vec3(-1,2,1), glm::vec3(0,1,0), glm::vec2(0,1) },
+        Vertex{glm::vec3(-1,2,-1),glm::vec3(0,0,1), glm::vec2(1,1) },
     };
-
 
     GLuint indices[] = {
         0,1,3,
@@ -111,46 +65,22 @@ int main() {
     };
 
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
 
-    GLuint VAO,VBO,EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    auto vert = std::vector(vertices, vertices + 16);
+    auto ind = std::vector(indices, indices + 24);
+    auto mesh = Mesh(vert,ind);
 
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    auto shader = Shader("../assets/shaders/vert.vert", "../assets/shaders/frag.frag");
+    auto texture = Texture::LoadTexture("../assets/penguin.jpg");
+    shader.SetTexture2D(GL_TEXTURE0, texture);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(3* sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)(6* sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    stbi_set_flip_vertically_on_load(true);
-    int width, height, channels;
-    auto *image = stbi_load("../assets/penguin.jpg", &width, &height, &channels,4);
-    uint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(image);
-
-
-    auto program = loadProgram();
+    auto object = SceneObject(mesh, shader);
+    Camera camera;
 
     float angle = 0.0f;
     glm::vec3 cameraPos = glm::vec3(0, 1, 8);
     glm::vec3 modelPos = glm::vec3(0, 0, 0);
+    camera.SetPosition(cameraPos);
 
     bool running = true;
     auto lastFrame = SDL_GetTicksNS();
@@ -167,10 +97,10 @@ int main() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
+
         auto deltaMilis = (SDL_GetTicksNS() - lastFrame) / 1000000.0f;
         lastFrame = SDL_GetTicksNS();
-        auto label = "Frametime: " + std::to_string(deltaMilis);
-        ImGui::Text(label.c_str());
+        ImGui::Text("Frametime: %lf ms", deltaMilis);
 
         ImGui::SliderFloat("angle", &angle, 0.0f, 360.0f);
         ImGui::DragFloat3("camera", &cameraPos[0], 0.01f);
@@ -184,25 +114,20 @@ int main() {
         auto identity = glm::identity<glm::mat4>();
 
         modelPos.y = glm::sin(SDL_GetTicks() / 250.0f) / 2 + 0.5f;
-        auto model = glm::translate(identity, modelPos) * glm::rotate(identity, SDL_GetTicks() / 500.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        GLuint modelID = glGetUniformLocation(program, "model");
-        glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
 
-        auto camera = glm::translate(identity, -cameraPos);
-        GLuint cameraID = glGetUniformLocation(program, "camera");
-        glUniformMatrix4fv(cameraID, 1, GL_FALSE, &camera[0][0]);
+        // auto model = glm::translate(identity, modelPos) * glm::rotate(identity, SDL_GetTicks() / 500.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // shader.SetMatrix4x4("model", model);
 
-        glm::mat4 projection_matrix = glm::perspective(glm::radians(60 / 2.0), 16.0 / 9.0, 0.1, 100.0);
-        GLuint projectionID = glGetUniformLocation(program, "projection");
-        glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection_matrix[0][0]);
+        // auto camera = glm::inverse(glm::translate(identity, cameraPos));
+        // shader.SetMatrix4x4("camera", camera);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        // glm::mat4 projection_matrix = glm::perspective(glm::radians(60 / 2.0), 16.0 / 9.0, 0.1, 100.0);
+        // shader.SetMatrix4x4("view", projection_matrix * camera);
 
-        glUseProgram(program);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6 * 4, GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
+        // mesh.Draw();
+        camera.SetPosition(cameraPos);
+        camera.LookAt(glm::vec3(0,0,0));
+        object.Draw(camera);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);

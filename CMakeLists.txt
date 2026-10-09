@@ -27,6 +27,7 @@ target_include_directories(glad PUBLIC external/glad/include)
 add_subdirectory(external/glm)
 
 include_directories("src")
-add_executable(HouseGenerator src/main.cpp)
+file(GLOB HOUSE_GENERATOR_SRC src/*.cpp src/*.hpp)
+add_executable(HouseGenerator ${HOUSE_GENERATOR_SRC})
 target_link_libraries(ImGui PUBLIC SDL3::SDL3 OpenGL::GL)
 target_link_libraries(HouseGenerator PRIVATE ImGui SDL3::SDL3 OpenGL::GL glad glm)
