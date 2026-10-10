@@ -9,7 +9,7 @@
 
 class EventSystem {
     std::map<Uint32, std::vector<std::function<void(SDL_Event*)>>> callbacks;
-
+    
     public:
         EventSystem() = default;
         ~EventSystem() = default;

@@ -1,4 +1,8 @@
 #include "scene_object.hpp"
+
+#include <iostream>
+#include <ostream>
+
 #include "camera.hpp"
 
 void SceneObject::UpdateModelMatrix() {
@@ -33,23 +37,8 @@ void SceneObject::SetScale(glm::vec3 scale) {
 
 void SceneObject::Draw(Camera camera) {
     _shader.Bind();
-
-    // for (int i = 0; i < _mesh.vertices.size(); i++) {
-    //     for (
-    //         )
-    // }
     _shader.SetMatrix4x4("model", _modelMatrix);
-    // _shader.SetMatrix4x4("model", glm::identity<glm::mat4x4>());
-
-
-    auto c = glm::inverse(glm::translate(glm::identity<glm::mat4x4>(), glm::vec3(0,0,5.0f)));
-    // shader.SetMatrix4x4("camera", camera);
-
-    glm::mat4 projection_matrix = glm::perspective(glm::radians(60 / 2.0), 16.0 / 9.0, 0.1, 100.0);
-    // shader.SetMatrix4x4("view", projection_matrix * camera);
     auto cameraMatrix = camera.GetViewMatrix();
     _shader.SetMatrix4x4("view", cameraMatrix);
-    // _shader.SetMatrix4x4("view", projection_matrix * c);
-
     _mesh.Draw();
 }

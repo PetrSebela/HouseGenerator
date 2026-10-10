@@ -19,6 +19,12 @@
 #include "scene_object.hpp"
 #include "event_system.hpp"
 
+glm::vec3 polarToWorld(glm::vec3 polar) {
+    auto horizontal = glm::angleAxis(glm::radians(polar.x), glm::vec3(0, 1, 0));
+    auto vertical = glm::angleAxis(glm::radians(polar.y), glm::vec3(1, 0, 0));
+    return horizontal * vertical * glm::vec3(0,0,polar.z) + glm::vec3(0,1,0);
+}
+
 int main() {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
@@ -68,14 +74,36 @@ int main() {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+    glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 
     auto vert = std::vector(vertices, vertices + 16);
     auto ind = std::vector(indices, indices + 24);
     auto mesh = Mesh(vert,ind);
 
-    auto shader = Shader("../assets/shaders/vert.vert", "../assets/shaders/frag.frag");
-    auto texture = Texture::LoadTexture("../assets/penguin.jpg");
+    auto shader = Shader("assets/shaders/vert.vert", "assets/shaders/frag.frag");
+    auto texture = Texture::LoadTexture("assets/penguin.jpg");
     shader.SetTexture2D(GL_TEXTURE0, texture);
+
+
+    float size = 40.0f;
+    Vertex planeVertices[] = {
+        Vertex{glm::vec3(-1,0, -1) * size,glm::vec3(0,0,0), glm::vec2(0,0) },
+        Vertex{glm::vec3(1,0, -1) * size,glm::vec3(0,0,0), glm::vec2(1,0) },
+        Vertex{glm::vec3(-1,0, 1) * size, glm::vec3(0,0,0), glm::vec2(0,1) },
+        Vertex{glm::vec3(1,0, 1) * size, glm::vec3(0,0,0), glm::vec2(1,1) }
+    };
+
+    GLuint planeIndicies[] = {
+        0,1,3,
+        0,2,3
+    };
+
+    auto planeVert = std::vector(planeVertices, planeVertices + 4);
+    auto planeInd = std::vector(planeIndicies, planeIndicies + 6);
+    auto planeMesh = Mesh(planeVert, planeInd);
+
+    auto gridShader = Shader("assets/shaders/vert.vert", "assets/shaders/grid.frag");
+    auto plane = SceneObject(planeMesh, gridShader);
 
     auto object = SceneObject(mesh, shader);
     Camera camera;
@@ -86,10 +114,41 @@ int main() {
 
     EventSystem eventSystem;
 
+    glm::vec3 polarPosition = glm::vec3(0, 0, 5);
+
     auto lastFrame = SDL_GetTicksNS();
     bool running = true;
     eventSystem.RegisterEvent(SDL_EVENT_QUIT, [&running](auto&&){running = false;});
-    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [](const SDL_Event *event){std::cout << "test " << event->type << std::endl;});
+
+    bool down = false;
+
+    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [&down](const SDL_Event *event) {
+        if (event->button.button == SDL_BUTTON_LEFT)
+            down = true;
+    });
+    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_UP, [&down](const SDL_Event *event) {
+        if (event->button.button == SDL_BUTTON_LEFT)
+            down = false;
+    });
+
+    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_WHEEL, [&polarPosition](const SDL_Event *event) {
+        polarPosition -= glm::vec3(0, 0, event->wheel.y);
+        polarPosition.z = glm::clamp(polarPosition.z, 1.f, 25.f);
+    });
+
+    eventSystem.RegisterEvent(SDL_EVENT_MOUSE_MOTION, [&down, &polarPosition](const SDL_Event *event) {
+        if (!down)
+            return;
+        polarPosition -= glm::vec3(event->motion.xrel / 10.0, event->motion.yrel / 10.0, 0);
+        polarPosition.y = glm::clamp(polarPosition.y, -90.f + 1, 90.f - 1);
+    });
+
+    eventSystem.RegisterEvent(SDL_EVENT_WINDOW_RESIZED, [window,&camera](const SDL_Event *event) {
+        int width, height;
+        SDL_GetWindowSize(window, &width, &height);
+        glViewport(0, 0, width, height);
+        camera.SetAspectRatio((float)width / (float)height);
+    });
 
     while (running) {
         eventSystem.ProcessEvents();
@@ -104,7 +163,7 @@ int main() {
 
         ImGui::SliderFloat("angle", &angle, 0.0f, 360.0f);
         ImGui::DragFloat3("camera", &cameraPos[0], 0.01f);
-        ImGui::DragFloat3("model", &modelPos[0], 0.01f);
+        ImGui::DragFloat3("model", &polarPosition[0], 0.01f);
 
         ImGui::Render();
 
@@ -114,11 +173,18 @@ int main() {
 
         modelPos.y = glm::sin(SDL_GetTicks() / 250.0f) / 2 + 0.5f;
         object.SetPosition(modelPos);
-        // object.SetRotation(glm::vec3(0,SDL_GetTicks() / 15.0f,0));
 
-        camera.SetPosition(cameraPos);
+        auto pos = polarToWorld(polarPosition);
+        camera.SetPosition(pos);
         camera.LookAt(glm::vec3(0,0,0));
+
+        plane.Draw(camera);
         object.Draw(camera);
+
+        auto error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cout << "ERROR: " << error << std::endl;
+        }
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);

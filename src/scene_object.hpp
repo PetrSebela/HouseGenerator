@@ -8,9 +8,9 @@
 class SceneObject {
     Mesh _mesh;
     Shader _shader;
-    glm::mat4x4 _modelMatrix;
-    glm::vec3 _position;
-    glm::vec3 _rotation;
+    glm::mat4x4 _modelMatrix = glm::identity<glm::mat4x4>();
+    glm::vec3 _position = glm::vec3(0,0,0);
+    glm::vec3 _rotation = glm::vec3(0,0,0);
     glm::vec3 _scale = glm::vec3(1.0f);
 
     void UpdateModelMatrix();

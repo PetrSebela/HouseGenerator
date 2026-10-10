@@ -18,8 +18,10 @@ void EventSystem::ProcessEvents() {
     while (SDL_PollEvent(&event)) {
         // This probably should not be here, but i am too lazy to implement event wildcards
         ImGui_ImplSDL3_ProcessEvent(&event);
+        auto io = ImGui::GetIO();
+        if (io.WantCaptureMouse || io.WantTextInput)
+            continue;
 
-        // std::cout << "event occured" << std::endl;
         for( const auto& callback : callbacks[event.type]) {
             callback(&event);
         }

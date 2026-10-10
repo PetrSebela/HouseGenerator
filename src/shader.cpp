@@ -10,8 +10,11 @@
 GLuint Shader::bound;
 
 GLuint Shader::LoadShader(std::string path, GLuint type) {
-    if (!std::filesystem::exists(path))
+    if (!std::filesystem::exists(path)) {
+        auto current = std::filesystem::current_path();
+        std::cout << current << std::endl;
         throw std::runtime_error("No such source file: " + path);
+    }
 
     std::ifstream vertexShaderFile(path);
     std::stringstream buffer;
