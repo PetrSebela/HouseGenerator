@@ -16,7 +16,10 @@ public:
     void SetLookDirection(glm::vec3 lookDirection);
     void LookAt(glm::vec3 worldPosition);
     void SetAspectRatio(double aspectRatio);
+    glm::vec3 ScreenToWorld(glm::vec2 screenPosition);
+    glm::vec3 ScreenToDirection(glm::vec2 screenPositionNormalized);
     glm::mat4x4 GetViewMatrix();
+    glm::vec3 GetPosition();
 };
 
 

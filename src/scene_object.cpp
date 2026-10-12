@@ -7,11 +7,11 @@
 
 void SceneObject::UpdateModelMatrix() {
     _modelMatrix = glm::identity<glm::mat4>();
-    _modelMatrix = glm::scale(_modelMatrix, _scale);
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(_rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(_rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     _modelMatrix = glm::rotate(_modelMatrix, glm::radians(_rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
     _modelMatrix = glm::translate(_modelMatrix, _position);
+    _modelMatrix = glm::scale(_modelMatrix, _scale);
 }
 
 SceneObject::SceneObject(Mesh mesh, Shader shader) {
