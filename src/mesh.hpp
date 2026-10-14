@@ -14,6 +14,10 @@ public:
     ~Mesh();
     void SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices);
     void Draw();
+
+    void Clear();
+
+    static Mesh Plane(float size);
 };
 
 #endif

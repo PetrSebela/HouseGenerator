@@ -30,6 +30,11 @@ void Line::SetPoints(std::vector<glm::vec3> points) {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
+    if (points.size() < 2) {
+        _mesh.Clear();
+        return;
+    }
+
     for (int i = 0; i < points.size() - 1; i++) {
         auto start = points.at(i) + glm::vec3(0,0.01f,0);
         auto end = points.at(i + 1) + glm::vec3(0,0.01f,0);

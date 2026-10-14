@@ -14,6 +14,7 @@
 #include "mesh.hpp"
 #include "scene_object.hpp"
 #include "event_system.hpp"
+#include "handle.hpp"
 #include "line.hpp"
 
 Editor::Editor() {
@@ -95,35 +96,20 @@ void Editor::Run() {
     auto texture = Texture::LoadTexture("assets/penguin.jpg");
     shader.SetTexture2D(GL_TEXTURE0, texture);
 
-    float size = 40.0f;
-    Vertex planeVertices[] = {
-        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 1)}
-    };
-
-    GLuint planeIndicies[] = {
-        0, 1, 3,
-        0, 2, 3
-    };
-
-    auto planeVert = std::vector(planeVertices, planeVertices + 4);
-    auto planeInd = std::vector(planeIndicies, planeIndicies + 6);
-    auto planeMesh = Mesh(planeVert, planeInd);
-
+    // Grid setup
+    auto planeMesh = Mesh::Plane(40.0f);
     auto gridShader = Shader("assets/shaders/vert.vert", "assets/shaders/grid.frag");
     auto plane = SceneObject(planeMesh, gridShader);
     auto object = SceneObject(mesh, shader);
 
+    std::vector<Handle> handles;
+    for (int i = 0; i < 3; i++) {
+        Handle handle;
+        handle.SetPosition(glm::vec3(i,0,0));
+        handles.push_back(handle);
+    }
 
-    std::vector<glm::vec3> points{
-        glm::vec3(0, 0, 0),
-        glm::vec3(0, 0, 1),
-        glm::vec3(3, 0, 0),
-        glm::vec3(0, 0, -1),
-    };
-
+    std::vector<glm::vec3> points;
     Shader color("assets/shaders/vert.vert", "assets/shaders/color.frag");
     Line line(points, color);
 
@@ -142,11 +128,16 @@ void Editor::Run() {
     bool dragOutline = false;
     int dragPointIndex = 0;
     glm::vec3 cursorPosition = glm::vec3(0, 0, 0);
-    _eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [this, &dragOutline, &dragPointIndex, &cursorPosition, &points](const SDL_Event *event) {
-        if (PointInRange(cursorPosition, points, &dragPointIndex)) {
-            dragOutline = true;
-            return true;
+    _eventSystem.RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [this, &dragOutline, &cursorPosition, &handles, &dragPointIndex](const SDL_Event *event) {
+
+        for (int i = 0; i < handles.size(); i++) {
+            if (handles[i].Distance(cursorPosition) < 0.1f) {
+                dragOutline = true;
+                dragPointIndex = i;
+                return true;
+            }
         }
+
         return false;
     });
 
@@ -156,12 +147,11 @@ void Editor::Run() {
         return false;
     });
 
-    _eventSystem.RegisterEvent(SDL_EVENT_MOUSE_MOTION, [&dragOutline, &points, &line, &dragPointIndex, &cursorPosition](const SDL_Event *event) {
+    _eventSystem.RegisterEvent(SDL_EVENT_MOUSE_MOTION, [&dragOutline, &handles, &dragPointIndex, &cursorPosition](const SDL_Event *event) {
         if (!dragOutline)
             return false;
 
-        points[dragPointIndex] = cursorPosition;
-        line.SetPoints(points);
+        handles[dragPointIndex].SetPosition(cursorPosition);
         return true;
     });
 
@@ -224,18 +214,13 @@ void Editor::Run() {
         ImGui::Spacing();
         ImGui::Text("Arrays");
 
-        int index = points.size();
+        int index = handles.size();
         if (ImGui::InputInt("asd", &index)) {
-            if (index < points.size()) {
-                points.pop_back();
+            if (index < handles.size()) {
+                handles.pop_back();
             } else {
-                points.push_back(glm::vec3(0, 0, 0));
+                handles.push_back(Handle());
             }
-        }
-
-
-        for (int i = 0; i < points.size(); i++) {
-            ImGui::DragFloat3(std::to_string(i).c_str(), &(points[i])[0], 0.01f);
         }
 
         ImGui::End();
@@ -253,11 +238,23 @@ void Editor::Run() {
         _camera.SetPosition(pos);
         _camera.LookAt(glm::vec3(0, 0, 0));
 
+
+        points.clear();
+        for (auto handle: handles) {
+            points.push_back(handle.GetPosition());
+        }
         line.SetPoints(points);
+
         line.Draw(_camera);
 
         plane.Draw(_camera);
         object.Draw(_camera);
+
+        // handle.Draw(_camera);
+
+        for (auto handle : handles) {
+            handle.Draw(_camera);
+        }
 
         auto error = glGetError();
         if (error != GL_NO_ERROR) {

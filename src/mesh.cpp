@@ -40,3 +40,26 @@ void Mesh::Draw() {
     glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 }
+
+void Mesh::Clear() {
+    // Lets give the data jump rope and let it jump all over the memory :3
+    _vertices.clear();
+    _indices.clear();
+    SetData(_vertices, _indices);
+}
+
+Mesh Mesh::Plane(float size) {
+    std::vector<Vertex> vertices = {
+        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 1)}
+    };
+
+    std::vector<GLuint> indices = {
+        0, 1, 3,
+        0, 2, 3
+    };
+
+    return Mesh(vertices, indices);
+}
