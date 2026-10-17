@@ -8,11 +8,13 @@
 class Line {
     Mesh _mesh;
     Shader _shader;
-
+    bool _isLoop = false;
 public:
+    Line() = default;
     Line(Shader shader);
     Line(std::vector<glm::vec3> points, Shader shader);
     ~Line();
+    void SetLoop(bool loop);
     void Draw(Camera camera);
     void SetPoints(std::vector<glm::vec3> points);
 };

@@ -18,6 +18,10 @@ Line::Line(std::vector<glm::vec3> points, Shader shader) : Line(shader) {
 Line::~Line() {
 }
 
+void Line::SetLoop(bool loop) {
+    _isLoop = loop;
+}
+
 void Line::Draw(Camera camera) {
     _shader.Bind();
     _shader.SetMatrix4x4("model", glm::identity<glm::mat4>());
@@ -29,15 +33,19 @@ void Line::Draw(Camera camera) {
 void Line::SetPoints(std::vector<glm::vec3> points) {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
+    std::vector<glm::vec3> segments = points;
 
-    if (points.size() < 2) {
+    if (segments.size() < 2) {
         _mesh.Clear();
         return;
     }
 
-    for (int i = 0; i < points.size() - 1; i++) {
-        auto start = points.at(i) + glm::vec3(0,0.01f,0);
-        auto end = points.at(i + 1) + glm::vec3(0,0.01f,0);
+    if (_isLoop && segments.size() > 2) {}
+        segments.push_back(segments[0]);
+
+    for (int i = 0; i < segments.size() - 1; i++) {
+        auto start = segments[i] + glm::vec3(0,0.01f,0);
+        auto end = segments[i + 1] + glm::vec3(0,0.01f,0);
         auto direction = glm::normalize(end - start);
         auto right = glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)) * 0.1f;
 

@@ -5,7 +5,7 @@ float Handle::Distance(glm::vec3 from) {
 }
 
 void Handle::SetPosition(glm::vec3 position) {
-    _position = position;
+    _position = position + glm::vec3(0.0f, 0.01f, 0.0f);
 }
 
 glm::vec3 Handle::GetPosition() {

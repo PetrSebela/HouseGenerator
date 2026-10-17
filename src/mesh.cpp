@@ -1,6 +1,7 @@
 #include "mesh.hpp"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices) : Mesh() {
+
     SetData(vertices, indices);
 }
 
@@ -8,9 +9,6 @@ Mesh::Mesh() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-}
-
-Mesh::~Mesh() {
 }
 
 void Mesh::SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices) {
@@ -46,6 +44,43 @@ void Mesh::Clear() {
     _vertices.clear();
     _indices.clear();
     SetData(_vertices, _indices);
+}
+
+Mesh Mesh::Box() {
+    Vertex vertices[] = {
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec2(1, 1)},
+
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec2(1, 1)},
+
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec2(1, 1)},
+
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec2(1, 1)},
+    };
+    GLuint indices[] = {
+        0, 1, 3,
+        0, 2, 3,
+        4, 5, 7,
+        4, 6, 7,
+        8, 9, 11,
+        8, 10, 11,
+        12, 13, 15,
+        12, 14, 15,
+    };
+    auto vert = std::vector(vertices, vertices + 16);
+    auto ind = std::vector(indices, indices + 24);
+    return Mesh(vert, ind);
 }
 
 Mesh Mesh::Plane(float size) {
