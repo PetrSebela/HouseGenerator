@@ -44,10 +44,10 @@ void Line::SetPoints(std::vector<glm::vec3> points) {
         segments.push_back(segments[0]);
 
     for (int i = 0; i < segments.size() - 1; i++) {
-        auto start = segments[i] + glm::vec3(0,0.01f,0);
-        auto end = segments[i + 1] + glm::vec3(0,0.01f,0);
+        auto start = segments[i];
+        auto end = segments[i + 1];
         auto direction = glm::normalize(end - start);
-        auto right = glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)) * 0.1f;
+        auto right = glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)) * 0.05f;
 
         Vertex vertexSR{
             .position = start + right

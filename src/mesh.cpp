@@ -29,8 +29,11 @@ void Mesh::SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices) {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3* sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(6* sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)(6* sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(9* sizeof(float)));
+    glEnableVertexAttribArray(3);
 }
 
 void Mesh::Draw() {
@@ -48,25 +51,25 @@ void Mesh::Clear() {
 
 Mesh Mesh::Box() {
     Vertex vertices[] = {
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec3(0,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec2(0, 0)},
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec3(0,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(0,0,0), glm::vec2(1, 1)},
     };
     GLuint indices[] = {
         0, 1, 3,
@@ -85,10 +88,26 @@ Mesh Mesh::Box() {
 
 Mesh Mesh::Plane(float size) {
     std::vector<Vertex> vertices = {
-        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0), glm::vec2(1, 1)}
+        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(1, 1)}
+    };
+
+    std::vector<GLuint> indices = {
+        0, 1, 3,
+        0, 2, 3
+    };
+
+    return Mesh(vertices, indices);
+}
+
+Mesh Mesh::Quad() {
+    std::vector<Vertex> vertices = {
+        Vertex{glm::vec3(-1, -1, 0), glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, -1, 0 ) , glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 1, 0) , glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 1, 0), glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(1, 1)}
     };
 
     std::vector<GLuint> indices = {

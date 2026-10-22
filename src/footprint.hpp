@@ -16,8 +16,6 @@ class Footprint {
 
 
     void UpdateLine();
-    glm::vec3 ClosestPointToLine(glm::vec3 a, glm::vec3 b, glm::vec3 cursor);
-    float DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 cursor);
 
 public:
     bool Relax = false;

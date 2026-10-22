@@ -19,6 +19,8 @@ public:
 
     static Mesh Box();
     static Mesh Plane(float size);
+
+    static Mesh Quad();
 };
 
 #endif

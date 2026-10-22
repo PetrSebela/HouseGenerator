@@ -6,14 +6,16 @@
 
 class Camera {
     glm::vec3 _position;
-    glm::quat _rotation;
+    glm::vec3 _lookAt = glm::vec3(0.0f, 0.0f, 0.0f);
     float _fov = 90;
     double _aspectRatio = 16.0f/9.0f;
+    bool _isOrthographic = false;
+
 public:
     Camera() = default;
+    Camera(bool orthographic);
     ~Camera() = default;
     void SetPosition(glm::vec3 position);
-    void SetLookDirection(glm::vec3 lookDirection);
     void LookAt(glm::vec3 worldPosition);
     void SetAspectRatio(double aspectRatio);
     glm::vec3 ScreenToWorld(glm::vec2 screenPosition);
@@ -21,6 +23,5 @@ public:
     glm::mat4x4 GetViewMatrix();
     glm::vec3 GetPosition();
 };
-
 
 #endif

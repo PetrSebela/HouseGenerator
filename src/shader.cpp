@@ -50,6 +50,15 @@ Shader::Shader(std::string vsPath, std::string fsPath) {
     glAttachShader(_program, fragmentShader);
     glLinkProgram(_program);
 
+    int success;
+    char infoLog[1024];
+    glGetProgramiv(_program, GL_LINK_STATUS, &success);
+    if(!success)
+    {
+        glGetProgramInfoLog(_program, 1024, nullptr, infoLog);
+        throw std::runtime_error("Shader linking failed: " + std::string(infoLog));
+    }
+
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 }
@@ -71,4 +80,9 @@ void Shader::SetMatrix4x4(const char* name, glm::mat4 matrix) {
 void Shader::SetTexture2D(GLuint unit, GLuint texture) {
     glActiveTexture(unit);
     glBindTexture(GL_TEXTURE_2D, texture);
+}
+
+void Shader::SetFloat(const char *name, float value) {
+    // Bind();
+    // auto uniform = glGetUniformLocation(_program, name);
 }

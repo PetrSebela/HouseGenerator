@@ -19,6 +19,7 @@ public:
     void Bind();
     void SetMatrix4x4(const char* name, glm::mat4 matrix);
     void SetTexture2D(GLuint unit, GLuint texture);
+    void SetFloat(const char* name, float value);
 };
 
 #endif

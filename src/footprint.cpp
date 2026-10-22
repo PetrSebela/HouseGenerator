@@ -4,29 +4,13 @@
 #include <ostream>
 
 #include "editor.hpp"
+#include "geometry.hpp"
 
 void Footprint::UpdateLine() {
     _points.clear();
     for (auto handle : _handles)
         _points.push_back(handle.GetPosition());
     _outline.SetPoints(_points);
-}
-
-glm::vec3 Footprint::ClosestPointToLine(glm::vec3 a, glm::vec3 b, glm::vec3 cursor) {
-    auto segmentLength = distance(a, b);
-    auto cursorVector = cursor - a;
-    auto lineVector = (b - a) / segmentLength;
-    float distance = glm::dot(cursorVector, lineVector);
-    if(distance <= 0)
-        return a;
-    if(distance >= segmentLength)
-        return b;
-    return a + lineVector * distance;
-}
-
-float Footprint::DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 cursor) {
-    auto closest = ClosestPointToLine(a, b, cursor);
-    return glm::distance(closest, cursor);
 }
 
 Footprint::Footprint(Editor* editor) {
@@ -37,9 +21,10 @@ Footprint::Footprint(Editor* editor) {
     _outline.SetLoop(true);
 
     _handles = {
-        Handle(glm::vec3(0,0,1)),
-        Handle(glm::vec3(1,0,1)),
-        Handle(glm::vec3(0,0,0)),
+        Handle(glm::vec3(5,0,3)),
+        Handle(glm::vec3(5,0,-3)),
+        Handle(glm::vec3(-5,0,-3)),
+        Handle(glm::vec3(-5,0,3)),
     };
 
     // This callback is just pure mess, split it into more manageable chunks
@@ -70,7 +55,7 @@ Footprint::Footprint(Editor* editor) {
         for (int i = 0; i < _handles.size(); i++) {
             auto a = _handles[i].GetPosition();
             auto b = _handles[(i + 1) % _handles.size()].GetPosition();
-            auto point = ClosestPointToLine(a, b, cursor);
+            auto point = geo::ClosestPointOnLine(a, b, cursor);
             auto distance = glm::distance(point, cursor);
 
             if (distance < 0.2f && glm::distance(cursor, a) > 0.5f && glm::distance(cursor, b) > 0.5f ) {
@@ -101,7 +86,7 @@ Footprint::Footprint(Editor* editor) {
         if (Relax) {
             auto a = _handles[(_selectedPointIndex - 1) % _handles.size()].GetPosition();
             auto b = _handles[(_selectedPointIndex + 1) % _handles.size()].GetPosition();
-            target = ClosestPointToLine(a, b, cursor);
+            target = geo::ClosestPointOnLine(a, b, cursor);
         }
         else if (SnapToGrid) {
             target = glm::vec3(round(cursor.x / GridSize) * GridSize, 0, round(cursor.z / GridSize) * GridSize);

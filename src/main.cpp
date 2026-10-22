@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "editor.hpp"
 
 int main() {
@@ -8,6 +10,8 @@ int main() {
     auto context = SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(0);
     gladLoadGL(SDL_GL_GetProcAddress);
+
+
 
     Editor editor(window, context);
     editor.Run();

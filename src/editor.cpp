@@ -14,6 +14,7 @@
 #include "mesh.hpp"
 #include "scene_object.hpp"
 #include "event_system.hpp"
+#include "generator.hpp"
 
 void Editor::RegisterCallbacks() {
     _eventSystem->RegisterEvent(SDL_EVENT_QUIT, [this](auto &&) { _running = false; return false; });
@@ -52,10 +53,8 @@ void Editor::RegisterCallbacks() {
     });
 
     _eventSystem->RegisterEvent(SDL_EVENT_WINDOW_RESIZED, [this](const SDL_Event *event) {
-        int width, height;
-        SDL_GetWindowSize(_window, &width, &height);
-        glViewport(0, 0, width, height);
-        _camera->SetAspectRatio((float) width / (float) height);
+        SDL_GetWindowSize(_window, &_windowWidth, &_windowHeight);
+        _camera->SetAspectRatio((float) _windowWidth / (float) _windowHeight);
         return false;
     });
 }
@@ -87,6 +86,36 @@ void Editor::DrawUI() {
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+void Editor::SetupBuffers() {
+    glGenFramebuffers(1, &_defaultFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, _defaultFBO);
+
+    glGenTextures(1, &_renderTexture);
+    glBindTexture(GL_TEXTURE_2D, _renderTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 2160, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _renderTexture, 0);
+
+    glGenRenderbuffers(1, &_renderBufferObject);
+    glBindRenderbuffer(GL_RENDERBUFFER, _renderBufferObject);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 4096, 2160);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderBufferObject);
+
+    // Shadows
+    glGenFramebuffers(1, &_shadowMapFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
+
+    glGenTextures(1, &_shadowMapTexture);
+    glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _shadowMapTexture, 0);
+}
+
 glm::vec3 Editor::GetCursorWorldPosition() {
     auto mousePos = GetCursorNDC();
     auto cursorDirection = _camera->ScreenToDirection(mousePos);
@@ -100,6 +129,7 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     _context = context;
 
     _camera = std::make_unique<Camera>();
+    _shadowCamera = std::make_unique<Camera>(true);
     _eventSystem = std::make_unique<EventSystem>();
     _footprint = std::make_unique<Footprint>(this);
 
@@ -108,17 +138,20 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     ImGui_ImplSDL3_InitForOpenGL(_window, _context);
     ImGui_ImplOpenGL3_Init();
 
+
     RegisterCallbacks();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+
+    SetupBuffers();
 }
 
 glm::vec3 Editor::PolarToWorld(glm::vec3 polar) {
     auto horizontal = glm::angleAxis(glm::radians(polar.x), glm::vec3(0, 1, 0));
     auto vertical = glm::angleAxis(glm::radians(polar.y), glm::vec3(1, 0, 0));
-    return horizontal * vertical * glm::vec3(0, 0, polar.z) + glm::vec3(0, 0, 0);
+    return horizontal * vertical * glm::vec3(0, 0, polar.z);
 }
 
 glm::vec2 Editor::GetCursorNDC() {
@@ -134,38 +167,93 @@ glm::vec2 Editor::GetCursorNDC() {
 }
 
 void Editor::Run() {
-    auto mesh = Mesh::Box();
-    auto shader = Shader("assets/shaders/vert.vert", "assets/shaders/frag.frag");
-    auto texture = Texture::LoadTexture("assets/penguin.jpg");
-    shader.SetTexture2D(GL_TEXTURE0, texture);
-    auto penguin = SceneObject(mesh, shader);
+    auto penguinBox = Mesh::Box();
+    auto penguinShader = Shader("assets/shaders/vert.vert", "assets/shaders/frag.frag");
+    auto penguinTexture = Texture::LoadTexture("assets/penguin.jpg");
+    auto penguin = SceneObject(penguinBox, penguinShader);
+
+    auto brickAlbedo = Texture::LoadTexture("assets/textures/bricks/albedo.jpg");
+    auto brickNormal = Texture::LoadTexture("assets/textures/bricks/normal.jpg");
 
     // Grid setup
     auto planeMesh = Mesh::Plane(40.0f);
     auto gridShader = Shader("assets/shaders/vert.vert", "assets/shaders/grid.frag");
-    auto plane = SceneObject(planeMesh, gridShader);
+    auto grid = SceneObject(planeMesh, gridShader);
+
+    Shader shadowShader("assets/shaders/vert.vert", "assets/shaders/shadow.frag");
+    Shader wallShader("assets/shaders/vert.vert", "assets/shaders/wall.frag");
+
+    // Camera shadowCamera(true);
+    _shadowCamera->SetPosition(glm::vec3(9,12,15));
+    _shadowCamera->LookAt(glm::vec3(0,0,0));
+
+    SDL_GetWindowSize(_window, &_windowWidth, &_windowHeight);
+
+    Mesh quad = Mesh::Quad();
+    Shader lightShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
+    Shader postProcessShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
+    Generator generator;
 
     _running = true;
     while (_running) {
         _eventSystem->ProcessEvents();
 
-        glClearColor(0.12f, 0.12f, 0.12f, 1.0f);
+        // Shadow
+        glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
+        glViewport(0, 0, 2048, 2048);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        lightShader.Bind();
+        lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
+        penguinBox.Draw();
+        planeMesh.Draw();
+        generator.SetFootprint(_footprint->GetOutline());
+        generator.Draw(*_shadowCamera);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, _defaultFBO);
+        glViewport(0, 0, 4096, 2160);
+        glEnable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        auto pos = PolarToWorld(_cameraOrbitPosition);
+        penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
+
+        auto pos = PolarToWorld(_cameraOrbitPosition) + _cameraCenter;
         _camera->SetPosition(pos);
-        _camera->LookAt(glm::vec3(0, 0, 0));
+        _camera->LookAt(_cameraCenter);
 
-        _footprint->Draw(*_camera);
-        plane.Draw(*_camera);
+        shadowShader.Bind();
+        shadowShader.SetMatrix4x4("view", _camera->GetViewMatrix());
+        shadowShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
+        shadowShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
+        planeMesh.Draw();
+
+        wallShader.Bind();
+        wallShader.SetMatrix4x4("view", _camera->GetViewMatrix());
+        wallShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
+        wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
+        wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
+        generator.SetFootprint(_footprint->GetOutline());
+        generator.Draw(*_camera);
+
+        penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
         penguin.Draw(*_camera);
+        _footprint->Draw(*_camera);
 
-        auto error = glGetError();
-        if (error != GL_NO_ERROR) {
-            std::cout << "ERROR: " << error << std::endl;
-        }
+        // Render frame to screen with post processing
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, _windowWidth, _windowHeight);
+        glClearColor(0.12f, 0.12f, 0.12f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        postProcessShader.Bind();
+        postProcessShader.SetTexture2D(GL_TEXTURE0, _renderTexture);
+        // postProcessShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
+        quad.Draw();
 
+        glDisable(GL_FRAMEBUFFER_SRGB);
         DrawUI();
+        glEnable(GL_FRAMEBUFFER_SRGB);
         SDL_GL_SwapWindow(_window);
     }
 

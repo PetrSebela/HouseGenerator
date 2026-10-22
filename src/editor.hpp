@@ -11,17 +11,27 @@ class Editor {
     SDL_GLContext _context;
 
     std::unique_ptr<Camera> _camera;
+    std::unique_ptr<Camera> _shadowCamera;
     std::unique_ptr<EventSystem> _eventSystem;
     std::unique_ptr<Footprint> _footprint;
 
+    GLuint _defaultFBO;
+    GLuint _renderTexture;
+    GLuint _renderBufferObject;
+
+    GLuint _shadowMapFBO;
+    GLuint _shadowMapTexture;
+
+    int _windowWidth, _windowHeight;
     bool _running = false;
     bool _cameraPan = false;
     double _lastFrameTime;
 
-    glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, 0.0f, 5.0f);
-
+    glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, -10.0f, 15.0f);
+    glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);
     void RegisterCallbacks();
     void DrawUI();
+    void SetupBuffers();
 
 public:
     glm::vec3 GetCursorWorldPosition();

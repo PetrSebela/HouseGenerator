@@ -4,16 +4,16 @@
 #include "glad/gl.h"
 #include "SDL3/SDL_video.h"
 
+Camera::Camera(bool orthographic) {
+    _isOrthographic = orthographic;
+}
+
 void Camera::SetPosition(glm::vec3 position) {
     _position = position;
 }
 
-void Camera::SetLookDirection(glm::vec3 lookDirection) {
-    _rotation = glm::quatLookAt(lookDirection, glm::vec3(0,1,0));
-}
-
 void Camera::LookAt(glm::vec3 worldPosition) {
-    _rotation = glm::quatLookAt(worldPosition - _position, glm::vec3(0,1,0));
+    _lookAt = worldPosition;
 }
 
 void Camera::SetAspectRatio(double aspectRatio) {
@@ -33,9 +33,15 @@ glm::vec3 Camera::ScreenToDirection(glm::vec2 screenPositionNormalized) {
 }
 
 glm::mat4x4 Camera::GetViewMatrix() {
-    auto projection = glm::perspective(glm::radians(_fov / 2.0), _aspectRatio, 0.1, 100.0);
-    auto look = glm::lookAt(_position, glm::vec3(0,0,0), glm::vec3(0.0,1.0,0.0));
-    return glm::mat4x4(projection) * look;
+    glm::mat4x4 projection;
+
+    if (_isOrthographic)
+        projection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.0f,75.0f);
+    else
+        projection = glm::perspective(glm::radians(_fov / 2.0), _aspectRatio, 0.1, 100.0);
+
+    auto look = glm::lookAt(_position, _lookAt, glm::vec3(0.0,1.0,0.0));
+    return projection * look;
 }
 
 glm::vec3 Camera::GetPosition() {

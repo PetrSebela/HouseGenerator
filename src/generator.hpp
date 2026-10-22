@@ -1,0 +1,25 @@
+#pragma once
+#include <vector>
+
+#include "camera.hpp"
+#include "mesh.hpp"
+#include "shader.hpp"
+#include "glm/glm.hpp"
+
+
+class Generator {
+    std::vector<glm::vec3> _footprint;
+
+    Shader _shader = Shader("assets/shaders/vert.vert", "assets/shaders/wall.frag");
+    Mesh _walls;
+
+public:
+    float Levels = 1;
+    float LevelHeight = 2.4f;
+
+    Generator() = default;
+    ~Generator() = default;
+    void SetFootprint(std::vector<glm::vec3> footprint);
+    void RefreshModel();
+    void Draw(Camera camera);
+};
