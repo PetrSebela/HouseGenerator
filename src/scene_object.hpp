@@ -7,7 +7,6 @@
 
 class SceneObject {
     Mesh _mesh;
-    Shader _shader;
     glm::mat4x4 _modelMatrix = glm::identity<glm::mat4x4>();
     glm::vec3 _position = glm::vec3(0,0,0);
     glm::vec3 _rotation = glm::vec3(0,0,0);
@@ -16,12 +15,12 @@ class SceneObject {
     void UpdateModelMatrix();
 
 public:
-    SceneObject(Mesh mesh, Shader s);
+    SceneObject(Mesh mesh);
     ~SceneObject() = default;
     void SetPosition(glm::vec3 rotation);
     void SetRotation(glm::vec3 rotation);
     void SetScale(glm::vec3 scale);
-    void Draw(Camera camera);
+    void Draw(Camera camera, Shader &shader);
 };
 
 

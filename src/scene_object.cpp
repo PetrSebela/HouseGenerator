@@ -14,9 +14,8 @@ void SceneObject::UpdateModelMatrix() {
     _modelMatrix = glm::scale(_modelMatrix, _scale);
 }
 
-SceneObject::SceneObject(Mesh mesh, Shader shader) {
+SceneObject::SceneObject(Mesh mesh) {
     _mesh = mesh;
-    _shader = shader;
     UpdateModelMatrix();
 }
 
@@ -35,10 +34,8 @@ void SceneObject::SetScale(glm::vec3 scale) {
     UpdateModelMatrix();
 }
 
-void SceneObject::Draw(Camera camera) {
-    _shader.Bind();
-    _shader.SetMatrix4x4("model", _modelMatrix);
-    auto cameraMatrix = camera.GetViewMatrix();
-    _shader.SetMatrix4x4("view", cameraMatrix);
+void SceneObject::Draw(Camera camera, Shader &shader) {
+    shader.SetMatrix4x4("model", _modelMatrix);
+    shader.SetMatrix4x4("view", camera.GetViewMatrix());
     _mesh.Draw();
 }

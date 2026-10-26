@@ -25,6 +25,12 @@ void Editor::RegisterCallbacks() {
         return false;
     });
 
+    _eventSystem->RegisterEvent(SDL_EVENT_KEY_DOWN, [this](const SDL_Event *event) {
+        if (event->key.key == SDLK_W)
+            _wireframe = !_wireframe;
+        return false;
+    });
+
     // Camera panning
     _eventSystem->RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [this](const SDL_Event *event) {
         if (event->button.button == SDL_BUTTON_LEFT)
@@ -75,6 +81,7 @@ void Editor::DrawUI() {
     auto deltaMilis = (SDL_GetTicksNS() - _lastFrameTime) / 1000000.0f;
     _lastFrameTime = SDL_GetTicksNS();
     ImGui::Text("Frametime: %lf ms", deltaMilis);
+    ImGui::Checkbox("Use wireframe", &_wireframe);
     ImGui::Checkbox("Relax selected", &_footprint->Relax);
     ImGui::Checkbox("Snap to grid", &_footprint->SnapToGrid);
     ImGui::SliderFloat("Grid size", &_footprint->GridSize, 0.01, 1.0f);
@@ -108,7 +115,7 @@ void Editor::SetupBuffers() {
 
     glGenTextures(1, &_shadowMapTexture);
     glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -138,12 +145,13 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     ImGui_ImplSDL3_InitForOpenGL(_window, _context);
     ImGui_ImplOpenGL3_Init();
 
-
     RegisterCallbacks();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+
+    glLineWidth(2.0f);
 
     SetupBuffers();
 }
@@ -170,7 +178,7 @@ void Editor::Run() {
     auto penguinBox = Mesh::Box();
     auto penguinShader = Shader("assets/shaders/vert.vert", "assets/shaders/frag.frag");
     auto penguinTexture = Texture::LoadTexture("assets/penguin.jpg");
-    auto penguin = SceneObject(penguinBox, penguinShader);
+    auto penguin = SceneObject(penguinBox);
 
     auto brickAlbedo = Texture::LoadTexture("assets/textures/bricks/albedo.jpg");
     auto brickNormal = Texture::LoadTexture("assets/textures/bricks/normal.jpg");
@@ -178,12 +186,11 @@ void Editor::Run() {
     // Grid setup
     auto planeMesh = Mesh::Plane(40.0f);
     auto gridShader = Shader("assets/shaders/vert.vert", "assets/shaders/grid.frag");
-    auto grid = SceneObject(planeMesh, gridShader);
+    auto grid = SceneObject(planeMesh);
 
     Shader shadowShader("assets/shaders/vert.vert", "assets/shaders/shadow.frag");
     Shader wallShader("assets/shaders/vert.vert", "assets/shaders/wall.frag");
 
-    // Camera shadowCamera(true);
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
 
@@ -202,12 +209,15 @@ void Editor::Run() {
         glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
         glViewport(0, 0, 2048, 2048);
         glClear(GL_DEPTH_BUFFER_BIT);
+
         lightShader.Bind();
         lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
         penguinBox.Draw();
         planeMesh.Draw();
         generator.SetFootprint(_footprint->GetOutline());
-        generator.Draw(*_shadowCamera);
+
+        if (!_wireframe)
+            generator.Draw(*_shadowCamera);
 
         glBindFramebuffer(GL_FRAMEBUFFER, _defaultFBO);
         glViewport(0, 0, 4096, 2160);
@@ -234,11 +244,19 @@ void Editor::Run() {
         wallShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
         wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
         wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
+
+        if (_wireframe)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
         generator.SetFootprint(_footprint->GetOutline());
         generator.Draw(*_camera);
 
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
         penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
-        penguin.Draw(*_camera);
+        penguin.Draw(*_camera, penguinShader);
         _footprint->Draw(*_camera);
 
         // Render frame to screen with post processing

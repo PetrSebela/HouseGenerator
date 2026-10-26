@@ -5,10 +5,12 @@
 #include "mesh.hpp"
 #include "shader.hpp"
 #include "glm/glm.hpp"
-
+#include "segment.hpp"
 
 class Generator {
-    std::vector<glm::vec3> _footprint;
+    // std::vector<glm::vec3> _footprint;
+    std::vector<Segment> _footprint;
+
 
     Shader _shader = Shader("assets/shaders/vert.vert", "assets/shaders/wall.frag");
     Mesh _walls;
