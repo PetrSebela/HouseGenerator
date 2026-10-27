@@ -16,10 +16,9 @@ public:
     void Draw();
 
     void Clear();
-
+    static Mesh Join(Mesh a, Mesh b);
     static Mesh Box();
     static Mesh Plane(float size);
-
     static Mesh Quad();
 };
 

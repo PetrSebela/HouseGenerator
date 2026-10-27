@@ -28,7 +28,7 @@ void main() {
 //    THIS IS TEMPORARY, CONSTRUCT PROPPER TBN MATRIX WHEN REFACTORING!!!!!
     vec3 tangent = vec3(0,1,0);
     vec3 bitangent = cross(tangent, vertNormal);
-    mat3 TBN = mat3(-tangent, bitangent, vertNormal);
+    mat3 TBN = mat3(tangent, bitangent, vertNormal);
     vec3 normal = texture(normalMap, vertUV).rgb;
     normal = normalize(normal * 2.0 - 1.0) * 3;
     vec3 mappedNormal = TBN * normal;

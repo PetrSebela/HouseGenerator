@@ -1,4 +1,5 @@
 #pragma once
+#include "glm/vec2.hpp"
 #include "glm/vec3.hpp"
 
 class Segment {
@@ -10,6 +11,11 @@ public:
     ~Segment() = default;
     float Length();
     glm::vec3 Normal();
+    glm::vec3 Direction();
+
+    glm::vec2 GetStartFlat();
+    glm::vec2 GetEndFlat();
+    glm::vec2 GetDirectionFlat();
 
     Segment Offset(float amount);
 };

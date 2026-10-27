@@ -49,6 +49,17 @@ void Mesh::Clear() {
     SetData(_vertices, _indices);
 }
 
+Mesh Mesh::Join(Mesh a, Mesh b) {
+    std::vector<Vertex> vertices(a._vertices);
+    vertices.insert(vertices.end(), b._vertices.begin(), b._vertices.end());
+    std::vector<GLuint> indices(a._indices);
+    int offset = a._vertices.size();
+    for (auto index: b._indices) {
+        indices.push_back(offset + index);
+    }
+    return Mesh(vertices, indices);
+}
+
 Mesh Mesh::Box() {
     Vertex vertices[] = {
         Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
