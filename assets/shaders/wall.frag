@@ -17,12 +17,14 @@ in struct VertexOut{
 //in vec2 vertUV;
 //in vec3 vertNormal;
 
-out vec4 FragColor;
+layout(location=0) out vec4 FragColor;
+layout(location=1) out vec4 FragNormal;
+layout(location=2) out vec4 FragPosition;
 
 float shadow(vec3 lightPos)
 {
     if (abs(lightPos.x) > 1 || abs(lightPos.y) > 1)
-    return 0;
+        return 0;
 
     float bias = 0.0001;
     vec2 texCoords = (lightPos.xy + vec2(1,1) ) / 2;
@@ -38,13 +40,13 @@ void main() {
     vec3 bitangent = cross(tangent, frag.normal);
     mat3 TBN = mat3(tangent, bitangent, frag.normal);
     vec3 normal = texture(normalMap, frag.uv).rgb;
-    normal = normalize(normal * 2.0 - 1.0) * 3;
+    normal = -normalize(normal * 2.0 - 1.0);
     vec3 mappedNormal = TBN * normal;
     float intensity = max(dot(mappedNormal, normalize(-vec3(1,1,1))), 0) * (1 - shadow(frag.lightSpacePosition));
     float ambient = 0.25 + 0.25 * intensity;
     vec4 albedo = texture(albedoMap, frag.uv);
 
-//  texture is in sRGB, doing this to avoid double gamma correction
-    vec3 color = pow(albedo.rgb, vec3(1.6)) * ambient;
-    FragColor = vec4(color, 1);
+    FragColor = pow(texture(albedoMap, frag.uv),vec4(1.6));
+    FragNormal = vec4(mappedNormal, 1);
+    FragPosition = vec4(frag.worldPosition, 1);
 }

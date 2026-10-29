@@ -46,7 +46,7 @@ void Editor::RegisterCallbacks() {
 
     _eventSystem->RegisterEvent(SDL_EVENT_MOUSE_WHEEL, [this](const SDL_Event *event) {
         _cameraOrbitPosition -= glm::vec3(0, 0, event->wheel.y);
-        _cameraOrbitPosition.z = glm::clamp(_cameraOrbitPosition.z, 1.f, 25.f);
+        _cameraOrbitPosition.z = glm::clamp(_cameraOrbitPosition.z, 1.f, 75.f);
         return false;
     });
 
@@ -54,7 +54,7 @@ void Editor::RegisterCallbacks() {
         if (!_cameraPan)
             return false;
         _cameraOrbitPosition -= glm::vec3(event->motion.xrel / 10.0, event->motion.yrel / 10.0, 0);
-        _cameraOrbitPosition.y = glm::clamp(_cameraOrbitPosition.y, -90.f + 1, 90.f - 1);
+        _cameraOrbitPosition.y = glm::clamp(_cameraOrbitPosition.y, -90.f + 1, -0.1f);
         return false;
     });
 
@@ -94,16 +94,22 @@ void Editor::DrawUI() {
 }
 
 void Editor::SetupBuffers() {
-    glGenFramebuffers(1, &_defaultFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, _defaultFBO);
+    glGenFramebuffers(1, &_gBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
 
-    glGenTextures(1, &_renderTexture);
-    glBindTexture(GL_TEXTURE_2D, _renderTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4096, 2160, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _renderTexture, 0);
+    _albedoTexture = Texture::GenTexture(4096, 2160);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _albedoTexture, 0);
 
+    _normalTexture = Texture::GenTexture(4096, 2160);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _normalTexture, 0);
+
+    _positionTexture = Texture::GenTexture(4096, 2160);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _positionTexture, 0);
+
+    GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, buffers);
+
+    // Depth buffer setup
     glGenRenderbuffers(1, &_renderBufferObject);
     glBindRenderbuffer(GL_RENDERBUFFER, _renderBufferObject);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 4096, 2160);
@@ -115,7 +121,7 @@ void Editor::SetupBuffers() {
 
     glGenTextures(1, &_shadowMapTexture);
     glBindTexture(GL_TEXTURE_2D, _shadowMapTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 2048, 2048, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -208,7 +214,7 @@ void Editor::Run() {
 
         // Shadow
         glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
-        glViewport(0, 0, 2048, 2048);
+        glViewport(0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
         glClear(GL_DEPTH_BUFFER_BIT);
 
         lightShader.Bind();
@@ -220,12 +226,12 @@ void Editor::Run() {
         if (!_wireframe)
             generator.Draw(*_shadowCamera);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, _defaultFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
         glViewport(0, 0, 4096, 2160);
         glEnable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
@@ -260,18 +266,20 @@ void Editor::Run() {
         _footprint->Draw(*_camera);
 
         // Render frame to screen with post processing
+        glEnable(GL_FRAMEBUFFER_SRGB);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, _windowWidth, _windowHeight);
-        glClearColor(0.12f, 0.12f, 0.12f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         postProcessShader.Bind();
-        postProcessShader.SetTexture2D(GL_TEXTURE0, _renderTexture);
-        // postProcessShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
+        postProcessShader.SetTexture2D(GL_TEXTURE0, _albedoTexture);
+        postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
+        postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
+        postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
+        postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
         quad->Draw();
-
         glDisable(GL_FRAMEBUFFER_SRGB);
+
         DrawUI();
-        glEnable(GL_FRAMEBUFFER_SRGB);
         SDL_GL_SwapWindow(_window);
     }
 

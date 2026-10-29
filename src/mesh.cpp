@@ -74,25 +74,25 @@ std::shared_ptr<Mesh> Mesh::Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> 
 
 std::shared_ptr<Mesh> Mesh::Box() {
     Vertex vertices[] = {
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec3(0,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(0,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec3(1,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(1,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec3(1,0,0), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec3(0,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec3(0,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(0,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec3(-1,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec3(-1,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec3(-1,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(-1,0,0), glm::vec2(1, 1)},
     };
     GLuint indices[] = {
         0, 1, 3,
@@ -111,10 +111,10 @@ std::shared_ptr<Mesh> Mesh::Box() {
 
 std::shared_ptr<Mesh> Mesh::Plane(float size) {
     std::vector<Vertex> vertices = {
-        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,0,0), glm::vec2(1, 1)}
+        Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,1,0),glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,1,0),glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,1,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 0, 1) * size, glm::vec3(0, 0, 0),glm::vec3(0,1,0), glm::vec2(1, 1)}
     };
 
     std::vector<GLuint> indices = {

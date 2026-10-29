@@ -48,18 +48,22 @@ void Line::SetPoints(std::vector<glm::vec3> points) {
         Vertex vertexSR{
             .position = start + right
         };
+        vertexSR.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 
         Vertex vertexSL{
             .position = start - right
         };
+        vertexSL.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 
         Vertex vertexER{
             .position = end + right
         };
+        vertexER.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 
         Vertex vertexEL{
             .position = end - right
         };
+        vertexEL.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 
         auto baseVertexIndex = vertices.size();
 

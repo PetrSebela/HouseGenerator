@@ -15,12 +15,19 @@ class Editor {
     std::unique_ptr<EventSystem> _eventSystem;
     std::unique_ptr<Footprint> _footprint;
 
-    GLuint _defaultFBO;
-    GLuint _renderTexture;
+    GLuint _gBuffer;
+    // GLuint _renderTexture;
     GLuint _renderBufferObject;
+
+    GLuint _albedoTexture;
+    GLuint _normalTexture;
+    GLuint _depthTexture;
+    GLuint _positionTexture;
 
     GLuint _shadowMapFBO;
     GLuint _shadowMapTexture;
+
+    static constexpr int SHADOW_MAP_RESOLUTION = 4096;
 
     int _windowWidth, _windowHeight;
     bool _running = false;

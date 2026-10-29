@@ -6,6 +6,7 @@
 class Texture {
     public:
     static GLuint LoadTexture(const char* path);
+    static GLuint GenTexture(int width, int height);
 };
 
 #endif

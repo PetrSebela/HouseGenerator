@@ -9,7 +9,9 @@ in struct VertexOut{
     vec3 lightSpacePosition;
 } frag;
 
-out vec4 FragColor;
+layout(location=0) out vec4 FragColor;
+layout(location=1) out vec4 FragNormal;
+layout(location=2) out vec4 FragPosition;
 
 float shadow(vec3 lightPos)
 {
@@ -48,10 +50,15 @@ void main() {
     float major = grid(majorUV, majorWidth / 10);
     float minor = grid(minorUV, majorWidth);
 
+    vec3 majorColor = mix(vec3(0.5), vec3(1), major);
+    vec3 minorColor = mix(vec3(0.5), vec3(1), minor);
 
-    vec3 majorColor = mix(vec3(1), vec3(2), major) * ambient;
-    vec3 minorColor = mix(vec3(1), vec3(2), minor) * ambient;
 
-    FragColor = vec4(max(majorColor, minorColor), 1);
-//    FragColor = vec4(ambient, ambient, ambient, 1);
+    float center = distance(frag.uv, vec2(0.5,0.5)) * 2.25;
+    vec3 grid = max(majorColor, minorColor);
+
+
+    FragColor = vec4(mix(grid, vec3(0.5), clamp(center,0,1)), 1);
+    FragNormal = vec4(9,12,15, 1);
+    FragPosition = vec4(frag.worldPosition, 1);
 }
