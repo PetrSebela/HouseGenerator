@@ -1,8 +1,13 @@
 #version 460
 layout(binding=0) uniform sampler2D shadowMap;
 
-in vec3 fragWorldPosition;
-in vec3 fragLightPosition;
+in struct VertexOut{
+    vec3 color;
+    vec2 uv;
+    vec3 worldPosition;
+    vec3 normal;
+    vec3 lightSpacePosition;
+} frag;
 
 out vec4 FragColor;
 
@@ -11,13 +16,14 @@ float shadow(vec3 lightPos)
     if (abs(lightPos.x) > 1 || abs(lightPos.y) > 1)
         return 0;
 
-    float bias = 0.00001;
+    float bias = 0.0001;
     vec2 texCoords = (lightPos.xy + vec2(1,1) ) / 2;
-    if((lightPos.z - bias + 1) / 2 > texture(shadowMap, texCoords.xy).r)
+    if((lightPos.z + 1) / 2 > texture(shadowMap, texCoords.xy).r + bias)
         return 1;
     return 0;
 }
 
+// Rewrite of https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 float grid(vec2 uv, vec2 targetWidth)
 {
     vec4 uvDDXY = vec4(dFdx(uv),dFdy(uv));
@@ -33,11 +39,11 @@ float grid(vec2 uv, vec2 targetWidth)
 }
 
 void main() {
-    float ambient = 0.2 + 0.3 * (1 - shadow(fragLightPosition));
+    float ambient = 0.2 + 0.3 * (1 - shadow(frag.lightSpacePosition));
 
     vec2 majorWidth = vec2(0.0175, 0.0175);
-    vec2 majorUV = fragWorldPosition.xz / 10 + vec2(0.5,0.5);
-    vec2 minorUV = fragWorldPosition.xz + vec2(0.5,0.5);
+    vec2 majorUV = frag.worldPosition.xz / 10 + vec2(0.5,0.5);
+    vec2 minorUV = frag.worldPosition.xz + vec2(0.5,0.5);
 
     float major = grid(majorUV, majorWidth / 10);
     float minor = grid(minorUV, majorWidth);

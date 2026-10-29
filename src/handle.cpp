@@ -19,5 +19,5 @@ void Handle::Draw(Camera camera) {
     auto cameraMatrix = camera.GetViewMatrix();
     _shader.SetMatrix4x4("view", cameraMatrix);
 
-    _mesh.Draw();
+    _mesh->Draw();
 }

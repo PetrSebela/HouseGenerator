@@ -56,7 +56,7 @@ Shader::Shader(std::string vsPath, std::string fsPath) {
     if(!success)
     {
         glGetProgramInfoLog(_program, 1024, nullptr, infoLog);
-        throw std::runtime_error("Shader linking failed: " + std::string(infoLog));
+        throw std::runtime_error("( " + vsPath + "," + fsPath + " ) Shader linking failed: " + std::string(infoLog));
     }
 
     glDeleteShader(vertexShader);

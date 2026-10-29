@@ -8,7 +8,7 @@
 
 void Footprint::UpdateLine() {
     _points.clear();
-    for (auto handle : _handles)
+    for (auto& handle : _handles)
         _points.push_back(handle.GetPosition());
     _outline.SetPoints(_points);
 }
@@ -16,8 +16,7 @@ void Footprint::UpdateLine() {
 Footprint::Footprint(Editor* editor) {
     _editor = editor;
 
-    Shader color("assets/shaders/vert.vert", "assets/shaders/color.frag");
-    _outline = Line(color);
+    _outline = Line();
     _outline.SetLoop(true);
 
     _handles = {

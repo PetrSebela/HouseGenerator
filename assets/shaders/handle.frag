@@ -1,12 +1,17 @@
 #version 460
-in vec3 vertColor;
-in vec2 vertUV;
-in vec3 fragWorldPosition;
+in struct VertexOut{
+    vec3 color;
+    vec2 uv;
+    vec3 worldPosition;
+    vec3 normal;
+    vec3 lightSpacePosition;
+} frag;
+
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(0.0, 0.1, 0.5, 1.0);
-    float distance = length(vertUV - vec2(0.5,0.5));
+    FragColor = vec4(frag.color, 1);
+    float distance = length(frag.uv - vec2(0.5,0.5));
     float offset = 0.1;
     float thickness = 0.02;
 

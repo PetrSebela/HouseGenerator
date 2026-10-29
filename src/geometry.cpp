@@ -84,7 +84,7 @@ std::vector<Segment> geo::ConnectNeighbours(std::vector<Segment> &segments, bool
     return connected;
 }
 
-Mesh geo::BridgeSegments(std::vector<Segment> &a, std::vector<Segment> &b) {
+std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<Segment> &b) {
     if (a.size() != b.size())
         throw std::invalid_argument("Bridge operation requires same amount of segments on each side");
 
@@ -127,5 +127,5 @@ Mesh geo::BridgeSegments(std::vector<Segment> &a, std::vector<Segment> &b) {
         indices.push_back(base + 3);
     }
 
-    return Mesh(vertices, indices);
+    return std::make_shared<Mesh>(vertices, indices);
 }

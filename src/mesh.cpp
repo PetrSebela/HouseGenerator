@@ -1,7 +1,9 @@
 #include "mesh.hpp"
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices) : Mesh() {
+#include <iostream>
+#include <ostream>
 
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices) : Mesh() {
     SetData(vertices, indices);
 }
 
@@ -9,6 +11,10 @@ Mesh::Mesh() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+}
+
+Mesh::~Mesh() {
+    Free();
 }
 
 void Mesh::SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices) {
@@ -42,6 +48,12 @@ void Mesh::Draw() {
     glBindVertexArray(0);
 }
 
+void Mesh::Free() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+}
+
 void Mesh::Clear() {
     // Lets give the data jump rope and let it jump all over the memory :3
     _vertices.clear();
@@ -49,18 +61,18 @@ void Mesh::Clear() {
     SetData(_vertices, _indices);
 }
 
-Mesh Mesh::Join(Mesh a, Mesh b) {
-    std::vector<Vertex> vertices(a._vertices);
-    vertices.insert(vertices.end(), b._vertices.begin(), b._vertices.end());
-    std::vector<GLuint> indices(a._indices);
-    int offset = a._vertices.size();
-    for (auto index: b._indices) {
+std::shared_ptr<Mesh> Mesh::Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b) {
+    std::vector<Vertex> vertices(a->_vertices);
+    vertices.insert(vertices.end(), b->_vertices.begin(), b->_vertices.end());
+    std::vector<GLuint> indices(a->_indices);
+    int offset = a->_vertices.size();
+    for (auto index: b->_indices) {
         indices.push_back(offset + index);
     }
-    return Mesh(vertices, indices);
+    return std::make_shared<Mesh>(vertices, indices);
 }
 
-Mesh Mesh::Box() {
+std::shared_ptr<Mesh> Mesh::Box() {
     Vertex vertices[] = {
         Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(0, 0)},
         Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,0), glm::vec2(1, 0)},
@@ -94,10 +106,10 @@ Mesh Mesh::Box() {
     };
     auto vert = std::vector(vertices, vertices + 16);
     auto ind = std::vector(indices, indices + 24);
-    return Mesh(vert, ind);
+    return std::make_shared<Mesh>(vert, ind);
 }
 
-Mesh Mesh::Plane(float size) {
+std::shared_ptr<Mesh> Mesh::Plane(float size) {
     std::vector<Vertex> vertices = {
         Vertex{glm::vec3(-1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(0, 0)},
         Vertex{glm::vec3(1, 0, -1) * size, glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(1, 0)},
@@ -110,10 +122,10 @@ Mesh Mesh::Plane(float size) {
         0, 2, 3
     };
 
-    return Mesh(vertices, indices);
+    return std::make_shared<Mesh>(vertices, indices);
 }
 
-Mesh Mesh::Quad() {
+std::shared_ptr<Mesh> Mesh::Quad() {
     std::vector<Vertex> vertices = {
         Vertex{glm::vec3(-1, -1, 0), glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(0, 0)},
         Vertex{glm::vec3(1, -1, 0 ) , glm::vec3(0, 0, 0), glm::vec3(0,0,0),glm::vec2(1, 0)},
@@ -126,5 +138,5 @@ Mesh Mesh::Quad() {
         0, 2, 3
     };
 
-    return Mesh(vertices, indices);
+    return std::make_shared<Mesh>(vertices, indices);
 }

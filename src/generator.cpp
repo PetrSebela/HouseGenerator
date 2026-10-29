@@ -37,5 +37,5 @@ void Generator::RefreshModel() {
 }
 
 void Generator::Draw(Camera camera) {
-    _walls.Draw();
+    _walls->Draw();
 }

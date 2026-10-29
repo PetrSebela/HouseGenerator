@@ -7,11 +7,7 @@
 
 #include "camera.hpp"
 
-Line::Line(Shader shader) {
-    _shader = shader;
-}
-
-Line::Line(std::vector<glm::vec3> points, Shader shader) : Line(shader) {
+Line::Line(std::vector<glm::vec3> points) {
     SetPoints(points);
 }
 
@@ -27,7 +23,7 @@ void Line::Draw(Camera camera) {
     _shader.SetMatrix4x4("model", glm::identity<glm::mat4>());
     auto cameraMatrix = camera.GetViewMatrix();
     _shader.SetMatrix4x4("view", cameraMatrix);
-    _mesh.Draw();
+    _mesh->Draw();
 }
 
 void Line::SetPoints(std::vector<glm::vec3> points) {
@@ -36,7 +32,7 @@ void Line::SetPoints(std::vector<glm::vec3> points) {
     std::vector<glm::vec3> segments = points;
 
     if (segments.size() < 2) {
-        _mesh.Clear();
+        _mesh->Clear();
         return;
     }
 
@@ -80,5 +76,5 @@ void Line::SetPoints(std::vector<glm::vec3> points) {
         indices.push_back(baseVertexIndex + 3);
     }
 
-    _mesh.SetData(vertices, indices);
+    _mesh->SetData(vertices, indices);
 }

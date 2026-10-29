@@ -176,27 +176,26 @@ glm::vec2 Editor::GetCursorNDC() {
 
 void Editor::Run() {
     auto penguinBox = Mesh::Box();
-    auto penguinShader = Shader("assets/shaders/vert.vert", "assets/shaders/frag.frag");
+    auto penguinShader = Shader("assets/shaders/default.vert", "assets/shaders/frag.frag");
     auto penguinTexture = Texture::LoadTexture("assets/penguin.jpg");
     auto penguin = SceneObject(penguinBox);
 
-    auto brickAlbedo = Texture::LoadTexture("assets/textures/bricks/albedo.jpg");
-    auto brickNormal = Texture::LoadTexture("assets/textures/bricks/normal.jpg");
+    auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
+    auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
 
     // Grid setup
     auto planeMesh = Mesh::Plane(40.0f);
-    auto gridShader = Shader("assets/shaders/vert.vert", "assets/shaders/grid.frag");
     auto grid = SceneObject(planeMesh);
 
-    Shader shadowShader("assets/shaders/vert.vert", "assets/shaders/shadow.frag");
-    Shader wallShader("assets/shaders/vert.vert", "assets/shaders/wall.frag");
+    Shader shadowShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
+    Shader wallShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
 
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
 
     SDL_GetWindowSize(_window, &_windowWidth, &_windowHeight);
 
-    Mesh quad = Mesh::Quad();
+    auto quad = Mesh::Quad();
     Shader lightShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
     Shader postProcessShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
     Generator generator;
@@ -205,6 +204,8 @@ void Editor::Run() {
     while (_running) {
         _eventSystem->ProcessEvents();
 
+        generator.SetFootprint(_footprint->GetOutline());
+
         // Shadow
         glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
         glViewport(0, 0, 2048, 2048);
@@ -212,9 +213,9 @@ void Editor::Run() {
 
         lightShader.Bind();
         lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
-        penguinBox.Draw();
-        planeMesh.Draw();
-        generator.SetFootprint(_footprint->GetOutline());
+        penguinBox->Draw();
+        planeMesh->Draw();
+
 
         if (!_wireframe)
             generator.Draw(*_shadowCamera);
@@ -237,7 +238,7 @@ void Editor::Run() {
         shadowShader.SetMatrix4x4("view", _camera->GetViewMatrix());
         shadowShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
         shadowShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
-        planeMesh.Draw();
+        planeMesh->Draw();
 
         wallShader.Bind();
         wallShader.SetMatrix4x4("view", _camera->GetViewMatrix());
@@ -250,7 +251,6 @@ void Editor::Run() {
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        generator.SetFootprint(_footprint->GetOutline());
         generator.Draw(*_camera);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -267,7 +267,7 @@ void Editor::Run() {
         postProcessShader.Bind();
         postProcessShader.SetTexture2D(GL_TEXTURE0, _renderTexture);
         // postProcessShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
-        quad.Draw();
+        quad->Draw();
 
         glDisable(GL_FRAMEBUFFER_SRGB);
         DrawUI();

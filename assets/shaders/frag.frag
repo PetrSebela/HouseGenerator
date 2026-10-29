@@ -1,11 +1,16 @@
 #version 460
-in vec3 vertColor;
-in vec2 vertUV;
-out vec4 FragColor;
+in struct VertexOut{
+    vec3 color;
+    vec2 uv;
+    vec3 worldPosition;
+    vec3 normal;
+    vec3 lightSpacePosition;
+} frag;
 
+out vec4 FragColor;
 uniform sampler2D tex;
 
 void main()
 {
-    FragColor = pow(texture(tex, vertUV),vec4(1.2f));
+    FragColor = pow(texture(tex, frag.uv),vec4(1.2f));
 }

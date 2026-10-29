@@ -13,5 +13,5 @@ namespace geo {
     std::vector<Segment> Raise(std::vector<Segment> &segments, float amount);
     std::vector<Segment> Inset(std::vector<Segment>& segments, float amount);
     std::vector<Segment> ConnectNeighbours(std::vector<Segment>& segments, bool loop);
-    Mesh BridgeSegments(std::vector<Segment>& a, std::vector<Segment>& b);
+    std::shared_ptr<Mesh> BridgeSegments(std::vector<Segment>& a, std::vector<Segment>& b);
 }
