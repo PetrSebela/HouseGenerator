@@ -81,7 +81,7 @@ std::vector<Segment> geo::ConnectNeighbours(std::vector<Segment> &segments, bool
         connected.push_back(connectedSegment);
     }
 
-    return connected;
+    return  connected;
 }
 
 std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<Segment> &b) {

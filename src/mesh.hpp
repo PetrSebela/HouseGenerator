@@ -4,6 +4,9 @@
 
 #include "vertex.hpp"
 
+/**
+ * Abstraction on OpenGL buffers representing mesh
+ */
 class Mesh {
     GLuint VAO, VBO, EBO;
     std::vector<Vertex> _vertices;

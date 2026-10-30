@@ -4,13 +4,15 @@
 #include "shader.hpp"
 #include "camera.hpp"
 
+/**
+ * Represents object in scene
+ */
 class SceneObject {
     std::shared_ptr<Mesh> _mesh;
     glm::mat4x4 _modelMatrix = glm::identity<glm::mat4x4>();
     glm::vec3 _position = glm::vec3(0,0,0);
     glm::vec3 _rotation = glm::vec3(0,0,0);
     glm::vec3 _scale = glm::vec3(1.0f);
-
     void UpdateModelMatrix();
 
 public:

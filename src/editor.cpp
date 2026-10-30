@@ -110,10 +110,10 @@ void Editor::SetupBuffers() {
     glDrawBuffers(3, buffers);
 
     // Depth buffer setup
-    glGenRenderbuffers(1, &_renderBufferObject);
-    glBindRenderbuffer(GL_RENDERBUFFER, _renderBufferObject);
+    glGenRenderbuffers(1, &_depthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, _depthBuffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 4096, 2160);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _renderBufferObject);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depthBuffer);
 
     // Shadows
     glGenFramebuffers(1, &_shadowMapFBO);
@@ -218,7 +218,7 @@ void Editor::Run() {
         glClear(GL_DEPTH_BUFFER_BIT);
 
         lightShader.Bind();
-        lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
+        lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
         penguinBox->Draw();
         planeMesh->Draw();
 
@@ -241,14 +241,14 @@ void Editor::Run() {
         _camera->LookAt(_cameraCenter);
 
         shadowShader.Bind();
-        shadowShader.SetMatrix4x4("view", _camera->GetViewMatrix());
-        shadowShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
+        shadowShader.SetMatrix4x4("view", _camera->GetMatrix());
+        shadowShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
         shadowShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
         planeMesh->Draw();
 
         wallShader.Bind();
-        wallShader.SetMatrix4x4("view", _camera->GetViewMatrix());
-        wallShader.SetMatrix4x4("light", _shadowCamera->GetViewMatrix());
+        wallShader.SetMatrix4x4("view", _camera->GetMatrix());
+        wallShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
         wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
         wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
 
@@ -275,7 +275,7 @@ void Editor::Run() {
         postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
-        postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetViewMatrix());
+        postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
         quad->Draw();
         glDisable(GL_FRAMEBUFFER_SRGB);
 

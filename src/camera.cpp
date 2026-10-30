@@ -21,18 +21,18 @@ void Camera::SetAspectRatio(double aspectRatio) {
 }
 
 glm::vec3 Camera::ScreenToWorld(glm::vec2 screenPositionNormalized) {
-    auto cameraMatrix = GetViewMatrix();
+    auto cameraMatrix = GetMatrix();
     auto world = glm::inverse(cameraMatrix) * glm::vec4(screenPositionNormalized,-1.0f, 1.0f);
     return glm::vec3(world) / world.w;
 }
 
 glm::vec3 Camera::ScreenToDirection(glm::vec2 screenPositionNormalized) {
-    auto cameraMatrix = GetViewMatrix();
+    auto cameraMatrix = GetMatrix();
     auto world = glm::inverse(cameraMatrix) * glm::vec4(screenPositionNormalized,-1.0f, 1.0f);
     return glm::normalize(glm::vec3(world / world.w) - _position);
 }
 
-glm::mat4x4 Camera::GetViewMatrix() {
+glm::mat4x4 Camera::GetMatrix() {
     glm::mat4x4 projection;
 
     if (_isOrthographic)

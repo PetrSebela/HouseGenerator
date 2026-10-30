@@ -36,6 +36,6 @@ void SceneObject::SetScale(glm::vec3 scale) {
 
 void SceneObject::Draw(Camera camera, Shader &shader) {
     shader.SetMatrix4x4("model", _modelMatrix);
-    shader.SetMatrix4x4("view", camera.GetViewMatrix());
+    shader.SetMatrix4x4("view", camera.GetMatrix());
     _mesh->Draw();
 }
