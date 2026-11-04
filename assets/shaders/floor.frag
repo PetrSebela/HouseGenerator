@@ -42,6 +42,7 @@ float grid(vec2 uv, vec2 targetWidth)
 
 void main() {
     float ambient = 0.2 + 0.3 * (1 - shadow(frag.lightSpacePosition));
+    vec3 baseColor = vec3(210, 200, 200) / 255;
 
     vec2 majorWidth = vec2(0.0175, 0.0175);
     vec2 majorUV = frag.worldPosition.xz / 10 + vec2(0.5,0.5);
@@ -50,15 +51,15 @@ void main() {
     float major = grid(majorUV, majorWidth / 10);
     float minor = grid(minorUV, majorWidth);
 
-    vec3 majorColor = mix(vec3(0.5), vec3(1), major);
-    vec3 minorColor = mix(vec3(0.5), vec3(1), minor);
+    vec3 majorColor = mix(baseColor, vec3(1), major);
+    vec3 minorColor = mix(baseColor, vec3(1), minor);
 
 
     float center = distance(frag.uv, vec2(0.5,0.5)) * 2.25;
     vec3 grid = max(majorColor, minorColor);
 
 
-    FragColor = vec4(mix(grid, vec3(0.5), clamp(center,0,1)), 1);
+    FragColor = vec4(mix(grid, vec3(0.7, 0.8, 0.84), clamp(pow(center,3),0,1)), 1);
     FragNormal = vec4(9,12,15, 1);
     FragPosition = vec4(frag.worldPosition, 1);
 }

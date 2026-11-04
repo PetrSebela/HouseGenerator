@@ -190,7 +190,7 @@ void Editor::Run() {
     auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
 
     // Grid setup
-    auto planeMesh = Mesh::Plane(40.0f);
+    auto planeMesh = Mesh::Plane(150.0f);
     auto grid = SceneObject(planeMesh);
 
     Shader shadowShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
@@ -209,7 +209,6 @@ void Editor::Run() {
     _running = true;
     while (_running) {
         _eventSystem->ProcessEvents();
-
         generator.SetFootprint(_footprint->GetOutline());
 
         // Shadow
@@ -219,7 +218,7 @@ void Editor::Run() {
 
         lightShader.Bind();
         lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
-        penguinBox->Draw();
+        // penguinBox->Draw();
         planeMesh->Draw();
 
 
@@ -262,7 +261,7 @@ void Editor::Run() {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
-        penguin.Draw(*_camera, penguinShader);
+        // penguin.Draw(*_camera, penguinShader);
         _footprint->Draw(*_camera);
 
         // Render frame to screen with post processing
@@ -276,11 +275,18 @@ void Editor::Run() {
         postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
         postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
+
+        // Test
+        auto viewDirectionMatrix = glm::translate(glm::identity<glm::mat4>(), -_camera->GetPosition()) * glm::inverse(_camera->GetMatrix());
+        postProcessShader.SetMatrix4x4("inverseProjectionMatrix", viewDirectionMatrix);
         quad->Draw();
         glDisable(GL_FRAMEBUFFER_SRGB);
 
         DrawUI();
         SDL_GL_SwapWindow(_window);
+
+        // Limit framerate so my poor GPU does not explode
+        SDL_Delay(10);
     }
 
     SDL_GL_DestroyContext(_context);

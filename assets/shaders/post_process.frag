@@ -7,6 +7,7 @@ layout(binding=1) uniform sampler2D normalMap;
 layout(binding=2) uniform sampler2D positionMap;
 layout(binding=3) uniform sampler2D shadowMap;
 uniform mat4 lightSpaceTransform = mat4(1);
+uniform mat4 inverseProjectionMatrix = mat4(1);
 
 float inShadow(vec3 worldPos)
 {
@@ -28,7 +29,7 @@ void main() {
 
     // For now zero vector serves as flag that there isnt any geometry, I am too lazy to bind depth buffer
     if (length(normal) < 0.5) {
-        FragColor = vec4(0.5,0.5,0.5, 1);
+        FragColor = vec4(0.7, 0.8, 0.84, 1);
         return;
     }
 

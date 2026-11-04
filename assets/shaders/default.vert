@@ -19,9 +19,9 @@ out struct VertexOut{
 void main()
 {
     gl_Position = view * model * vec4(position, 1.0);
-
     frag.worldPosition = (model * vec4(position, 1.0)).xyz;
-    frag.color = vec3(0,0.1,0.5);
+    // TODO: for now, this changes colors of lines and handles, should use color stored in vertices
+    frag.color = vec3(0.1, 0.2, 0.9);
     frag.uv = uv;
     frag.normal = normal;
     frag.lightSpacePosition = (light * model * vec4(position, 1.0)).xyz;
