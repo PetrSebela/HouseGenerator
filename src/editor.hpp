@@ -41,6 +41,7 @@ class Editor {
     glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, -10.0f, 15.0f);
     glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);
     bool _wireframe = false;    // Show wireframe of generated model
+    int _bufferView = 0;
 
     /**
      * Registers editor callback with event system (unregistration is handled by deleting event system ┐(´～`)┌ )

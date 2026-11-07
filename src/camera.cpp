@@ -38,9 +38,21 @@ glm::mat4x4 Camera::GetMatrix() {
     if (_isOrthographic)
         projection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.0f,75.0f);
     else
-        projection = glm::perspective(glm::radians(_fov / 2.0), _aspectRatio, 0.1, 200.0);
+        projection = glm::perspective(glm::radians(_fov / 2.0), _aspectRatio, 0.1, 500.0);
 
     auto look = glm::lookAt(_position, _lookAt, glm::vec3(0.0,1.0,0.0));
+    return projection * look;
+}
+
+glm::mat4x4 Camera::GetProjectionMatrix() {
+    glm::mat4x4 projection;
+
+    if (_isOrthographic)
+        projection = glm::ortho(-20.0f,20.0f,-20.0f,20.0f,0.0f,75.0f);
+    else
+        projection = glm::perspective(glm::radians(_fov / 2.0), _aspectRatio, 0.1, 500.0);
+
+    auto look = glm::lookAt(glm::vec3(0,0,0), _lookAt - _position, glm::vec3(0.0,1.0,0.0));
     return projection * look;
 }
 

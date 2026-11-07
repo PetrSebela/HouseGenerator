@@ -83,6 +83,13 @@ void Shader::SetTexture2D(GLuint unit, GLuint texture) {
 }
 
 void Shader::SetFloat(const char *name, float value) {
-    // Bind();
-    // auto uniform = glGetUniformLocation(_program, name);
+    Bind();
+    auto uniform = glGetUniformLocation(_program, name);
+    glUniform1f(uniform, value);
+}
+
+void Shader::SetInt(const char *name, int value) {
+    Bind();
+    auto uniform = glGetUniformLocation(_program, name);
+    glUniform1i(uniform, value);
 }

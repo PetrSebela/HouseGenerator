@@ -25,7 +25,7 @@ public:
     void Clear();
 
     static std::shared_ptr<Mesh> Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b);
-    static std::shared_ptr<Mesh> Box();
+    static std::shared_ptr<Mesh> Cube();
     static std::shared_ptr<Mesh> Plane(float size);
     static std::shared_ptr<Mesh> Quad();
 };

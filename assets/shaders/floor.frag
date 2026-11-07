@@ -55,11 +55,12 @@ void main() {
     vec3 minorColor = mix(baseColor, vec3(1), minor);
 
 
-    float center = distance(frag.uv, vec2(0.5,0.5)) * 2.25;
+    float centerDistance = distance(frag.worldPosition.xyz, vec3(0,0,0));
+    float alpha = 1 - clamp((centerDistance - 100) / 50, 0, 1);
+
     vec3 grid = max(majorColor, minorColor);
 
-
-    FragColor = vec4(mix(grid, vec3(0.7, 0.8, 0.84), clamp(pow(center,3),0,1)), 1);
+    FragColor = vec4(grid, alpha);
     FragNormal = vec4(9,12,15, 1);
     FragPosition = vec4(frag.worldPosition, 1);
 }

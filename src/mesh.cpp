@@ -72,28 +72,39 @@ std::shared_ptr<Mesh> Mesh::Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> 
     return std::make_shared<Mesh>(vertices, indices);
 }
 
-std::shared_ptr<Mesh> Mesh::Box() {
+std::shared_ptr<Mesh> Mesh::Cube() {
     Vertex vertices[] = {
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, -1, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, -1, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 1, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 1, -1), glm::vec3(0, 0, 0), glm::vec3(0,0,-1), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, -1, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, -1, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0,0,1), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(1, 0, -1), glm::vec3(1, 1, 1), glm::vec3(1,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(1, 0, 1), glm::vec3(0, 1, 0), glm::vec3(1,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(1,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(1, 2, 1), glm::vec3(1, 0, 0), glm::vec3(1,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(1, -1, -1), glm::vec3(1, 1, 1), glm::vec3(1,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, -1, 1), glm::vec3(0, 1, 0), glm::vec3(1,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(1, 1, -1), glm::vec3(0, 0, 1), glm::vec3(1,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 1, 1), glm::vec3(1, 0, 0), glm::vec3(1,0,0), glm::vec2(1, 1)},
 
-        Vertex{glm::vec3(-1, 0, 1), glm::vec3(1, 1, 1), glm::vec3(-1,0,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(-1, 0, -1), glm::vec3(1, 0, 0), glm::vec3(-1,0,0), glm::vec2(1, 0)},
-        Vertex{glm::vec3(-1, 2, 1), glm::vec3(0, 1, 0), glm::vec3(-1,0,0), glm::vec2(0, 1)},
-        Vertex{glm::vec3(-1, 2, -1), glm::vec3(0, 0, 1), glm::vec3(-1,0,0), glm::vec2(1, 1)},
+        Vertex{glm::vec3(-1, -1, 1), glm::vec3(1, 1, 1), glm::vec3(-1,0,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(-1, -1, -1), glm::vec3(1, 0, 0), glm::vec3(-1,0,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(-1,0,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(-1, 1, -1), glm::vec3(0, 0, 1), glm::vec3(-1,0,0), glm::vec2(1, 1)},
+
+        Vertex{glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1), glm::vec3(0,-1,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(1, -1, -1), glm::vec3(1, 0, 0), glm::vec3(0,-1,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, -1, 1), glm::vec3(0, 1, 0), glm::vec3(0,-1,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, -1, 1), glm::vec3(0, 0, 1), glm::vec3(0,-1,0), glm::vec2(1, 1)},
+
+        Vertex{glm::vec3(-1, 1, -1), glm::vec3(1, 1, 1), glm::vec3(0,1,0), glm::vec2(0, 0)},
+        Vertex{glm::vec3(-1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0,1,0), glm::vec2(0, 1)},
+        Vertex{glm::vec3(1, 1, -1), glm::vec3(1, 0, 0), glm::vec3(0,1,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(1, 1, 1), glm::vec3(0, 0, 1), glm::vec3(0,1,0), glm::vec2(1, 1)},
     };
+
     GLuint indices[] = {
         0, 1, 3,
         0, 2, 3,
@@ -103,6 +114,10 @@ std::shared_ptr<Mesh> Mesh::Box() {
         8, 10, 11,
         12, 13, 15,
         12, 14, 15,
+        16,17,19,
+        16,18,19,
+        20, 21, 23,
+        20, 22, 23,
     };
     auto vert = std::vector(vertices, vertices + 16);
     auto ind = std::vector(indices, indices + 24);

@@ -54,7 +54,7 @@ void Editor::RegisterCallbacks() {
         if (!_cameraPan)
             return false;
         _cameraOrbitPosition -= glm::vec3(event->motion.xrel / 10.0, event->motion.yrel / 10.0, 0);
-        _cameraOrbitPosition.y = glm::clamp(_cameraOrbitPosition.y, -90.f + 1, -0.1f);
+        // _cameraOrbitPosition.y = glm::clamp(_cameraOrbitPosition.y, -90.f + 1, -0.1f);
         return false;
     });
 
@@ -85,6 +85,9 @@ void Editor::DrawUI() {
     ImGui::Checkbox("Relax selected", &_footprint->Relax);
     ImGui::Checkbox("Snap to grid", &_footprint->SnapToGrid);
     ImGui::SliderFloat("Grid size", &_footprint->GridSize, 0.01, 1.0f);
+
+    const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Stencil"};
+    ImGui::Combo("Buffer view", &_bufferView, items, 5);
 
     ImGui::End();
 
@@ -181,13 +184,13 @@ glm::vec2 Editor::GetCursorNDC() {
 }
 
 void Editor::Run() {
-    auto penguinBox = Mesh::Box();
-    auto penguinShader = Shader("assets/shaders/default.vert", "assets/shaders/frag.frag");
-    auto penguinTexture = Texture::LoadTexture("assets/penguin.jpg");
-    auto penguin = SceneObject(penguinBox);
-
     auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
     auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
+    auto skyboxTexture = Texture::LoadTexture("assets/textures/skybox.jpg");
+
+
+    auto skybox = Mesh::Cube();
+    auto skyboxShader = Shader("assets/shaders/default.vert", "assets/shaders/skybox.frag");
 
     // Grid setup
     auto planeMesh = Mesh::Plane(150.0f);
@@ -218,9 +221,7 @@ void Editor::Run() {
 
         lightShader.Bind();
         lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
-        // penguinBox->Draw();
         planeMesh->Draw();
-
 
         if (!_wireframe)
             generator.Draw(*_shadowCamera);
@@ -233,11 +234,16 @@ void Editor::Run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
-
         auto pos = PolarToWorld(_cameraOrbitPosition) + _cameraCenter;
         _camera->SetPosition(pos);
         _camera->LookAt(_cameraCenter);
+
+        glDepthMask(GL_FALSE);
+        skyboxShader.Bind();
+        skyboxShader.SetTexture2D(GL_TEXTURE0, skyboxTexture);
+        skyboxShader.SetMatrix4x4("view", _camera->GetProjectionMatrix());
+        skybox->Draw();
+        glDepthMask(GL_TRUE);
 
         shadowShader.Bind();
         shadowShader.SetMatrix4x4("view", _camera->GetMatrix());
@@ -260,25 +266,22 @@ void Editor::Run() {
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        penguinShader.SetTexture2D(GL_TEXTURE0, penguinTexture);
-        // penguin.Draw(*_camera, penguinShader);
         _footprint->Draw(*_camera);
 
         // Render frame to screen with post processing
+
         glEnable(GL_FRAMEBUFFER_SRGB);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, _windowWidth, _windowHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         postProcessShader.Bind();
         postProcessShader.SetTexture2D(GL_TEXTURE0, _albedoTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
         postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
         postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
-
-        // Test
-        auto viewDirectionMatrix = glm::translate(glm::identity<glm::mat4>(), -_camera->GetPosition()) * glm::inverse(_camera->GetMatrix());
-        postProcessShader.SetMatrix4x4("inverseProjectionMatrix", viewDirectionMatrix);
+        postProcessShader.SetInt("bufferView", _bufferView);
         quad->Draw();
         glDisable(GL_FRAMEBUFFER_SRGB);
 
