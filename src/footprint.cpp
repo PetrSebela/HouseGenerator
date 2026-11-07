@@ -19,13 +19,6 @@ Footprint::Footprint(Editor* editor) {
     _outline = Line();
     _outline.SetLoop(true);
 
-    // _handles = {
-    //     Handle(glm::vec3(5,0,3)),
-    //     Handle(glm::vec3(5,0,-3)),
-    //     Handle(glm::vec3(-5,0,-3)),
-    //     Handle(glm::vec3(-5,0,3)),
-    // };
-
     _handles = {
         Handle(glm::vec3(5,0,3)),
         Handle(glm::vec3(5,0,-3)),

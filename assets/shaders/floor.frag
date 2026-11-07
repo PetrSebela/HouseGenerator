@@ -1,5 +1,4 @@
 #version 460
-layout(binding=0) uniform sampler2D shadowMap;
 
 in struct VertexOut{
     vec3 color;
@@ -12,18 +11,6 @@ in struct VertexOut{
 layout(location=0) out vec4 FragColor;
 layout(location=1) out vec4 FragNormal;
 layout(location=2) out vec4 FragPosition;
-
-float shadow(vec3 lightPos)
-{
-    if (abs(lightPos.x) > 1 || abs(lightPos.y) > 1)
-        return 0;
-
-    float bias = 0.0001;
-    vec2 texCoords = (lightPos.xy + vec2(1,1) ) / 2;
-    if((lightPos.z + 1) / 2 > texture(shadowMap, texCoords.xy).r + bias)
-        return 1;
-    return 0;
-}
 
 // Rewrite of https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 float grid(vec2 uv, vec2 targetWidth)
@@ -41,7 +28,6 @@ float grid(vec2 uv, vec2 targetWidth)
 }
 
 void main() {
-    float ambient = 0.2 + 0.3 * (1 - shadow(frag.lightSpacePosition));
     vec3 baseColor = vec3(210, 200, 200) / 255;
 
     vec2 majorWidth = vec2(0.0175, 0.0175);

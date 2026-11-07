@@ -3,6 +3,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../external/stb_image.h"
 
+#include <vector>
+#include <string>
+
 GLuint Texture::LoadTexture(const char* path) {
     stbi_set_flip_vertically_on_load(true);
     int width, height, channels;
@@ -17,6 +20,39 @@ GLuint Texture::LoadTexture(const char* path) {
 
     stbi_image_free(image);
     return texture;
+}
+
+GLuint Texture::LoadSkybox(std::string path) {
+    GLuint skybox;
+    glGenTextures(1, &skybox);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
+
+    stbi_set_flip_vertically_on_load(false);
+    std::string faceFiles[] = {
+        "nx.png",
+        "px.png",
+        "ny.png",
+        "py.png",
+        "nz.png",
+        "pz.png",
+    };
+
+    for (int i= 0; i < 6; i++) {
+        auto facePath = path + "/" + faceFiles[i];
+        int width, height, nrChannels;
+        auto data = stbi_load(facePath.c_str(), &width, &height, &nrChannels, 0);
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+        );
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    return skybox;
 }
 
 GLuint Texture::GenTexture(int width, int height) {
