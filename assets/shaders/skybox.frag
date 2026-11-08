@@ -18,4 +18,5 @@ void main() {
     vec4 skyboxSample = texture(skybox, view);
     FragColor = skyboxSample;
     FragPosition = vec4(0, 1000, 0, 1);
+//    FragPosition = vec4(frag.worldPosition, 1);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include <glad/gl.h>
 
 #include "glm/fwd.hpp"
@@ -11,6 +12,7 @@
 class Shader {
     GLuint _program = 0;    // Program ID
     static GLuint bound;    // ID of program which is currently bound
+    std::unordered_map<GLuint, GLuint> textures;
 
 public:
     /**

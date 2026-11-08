@@ -9,7 +9,7 @@
 class Camera {
     glm::vec3 _position;            // Camera position in world coordinates
     glm::vec3 _lookAt;              // Point (in world coordinates) at which the camera look at all times
-    float _fov = 130;                // Camera FOV in degrees
+    float _fov = 80;                // Camera FOV in degrees
     double _aspectRatio = 1.7778f;  // Camera aspect ratio ( 16:9 by default )
     bool _isOrthographic = false;   // If camera uses orthographic projection ( in ideal world, i would use polymorphism to differentiate camera types)
 

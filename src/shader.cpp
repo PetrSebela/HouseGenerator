@@ -69,6 +69,11 @@ void Shader::Bind() {
 
     bound = _program;
     glUseProgram(_program);
+
+    for (auto texture: textures) {
+        glActiveTexture(texture.first);
+        glBindTexture(GL_TEXTURE_2D, texture.second);
+    }
 }
 
 void Shader::SetMatrix4x4(const char* name, glm::mat4 matrix) {
@@ -80,6 +85,7 @@ void Shader::SetMatrix4x4(const char* name, glm::mat4 matrix) {
 void Shader::SetTexture2D(GLuint unit, GLuint texture) {
     glActiveTexture(unit);
     glBindTexture(GL_TEXTURE_2D, texture);
+    textures[unit] = texture;
 }
 
 void Shader::SetFloat(const char *name, float value) {

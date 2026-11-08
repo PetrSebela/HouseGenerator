@@ -191,13 +191,17 @@ void Editor::Run() {
     // Skybox setup
     auto skybox = Mesh::Cube();
     auto skyboxShader = Shader("assets/shaders/default.vert", "assets/shaders/skybox.frag");
+    skyboxShader.SetTexture2D(GL_TEXTURE0, skyboxTexture);
 
     // Grid setup
     auto floor = Mesh::Plane(150.0f);
     auto grid = SceneObject(floor);
 
     Shader floorShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
+
     Shader wallShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
+    wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
+    wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
 
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
@@ -207,6 +211,10 @@ void Editor::Run() {
     auto quad = Mesh::Quad();
     Shader lightShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
     Shader postProcessShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
+    postProcessShader.SetTexture2D(GL_TEXTURE0, _albedoTexture);
+    postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
+    postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
+    postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
     Generator generator;
 
     _running = true;
@@ -225,7 +233,7 @@ void Editor::Run() {
         if (!_wireframe)
             generator.Draw(*_shadowCamera);
 
-
+        // Render geometry buffers
         glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
         glViewport(0, 0, 4096, 2160);
         glEnable(GL_ALPHA_TEST);
@@ -240,7 +248,7 @@ void Editor::Run() {
 
         glDepthMask(GL_FALSE);
         skyboxShader.Bind();
-        skyboxShader.SetTexture2D(GL_TEXTURE0, skyboxTexture);
+
         skyboxShader.SetMatrix4x4("view", _camera->GetProjectionMatrix());
         skybox->Draw();
         glDepthMask(GL_TRUE);
@@ -248,34 +256,24 @@ void Editor::Run() {
         floorShader.Bind();
         floorShader.SetMatrix4x4("view", _camera->GetMatrix());
         floorShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
-        floorShader.SetTexture2D(GL_TEXTURE0, _shadowMapTexture);
         floor->Draw();
 
+        glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
         wallShader.Bind();
         wallShader.SetMatrix4x4("view", _camera->GetMatrix());
         wallShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
-        wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
-        wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
-
-        glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
         generator.Draw(*_camera);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         _footprint->Draw(*_camera);
 
-
         // Render frame to screen with post processing
-
         glEnable(GL_FRAMEBUFFER_SRGB);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, _windowWidth, _windowHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         postProcessShader.Bind();
-        postProcessShader.SetTexture2D(GL_TEXTURE0, _albedoTexture);
-        postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
-        postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
-        postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
         postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
         postProcessShader.SetInt("bufferView", _bufferView);
         quad->Draw();

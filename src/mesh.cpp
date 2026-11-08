@@ -100,8 +100,8 @@ std::shared_ptr<Mesh> Mesh::Cube() {
         Vertex{glm::vec3(1, -1, 1), glm::vec3(0, 0, 1), glm::vec3(0,-1,0), glm::vec2(1, 1)},
 
         Vertex{glm::vec3(-1, 1, -1), glm::vec3(1, 1, 1), glm::vec3(0,1,0), glm::vec2(0, 0)},
-        Vertex{glm::vec3(-1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0,1,0), glm::vec2(0, 1)},
         Vertex{glm::vec3(1, 1, -1), glm::vec3(1, 0, 0), glm::vec3(0,1,0), glm::vec2(1, 0)},
+        Vertex{glm::vec3(-1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0,1,0), glm::vec2(0, 1)},
         Vertex{glm::vec3(1, 1, 1), glm::vec3(0, 0, 1), glm::vec3(0,1,0), glm::vec2(1, 1)},
     };
 
@@ -119,8 +119,8 @@ std::shared_ptr<Mesh> Mesh::Cube() {
         20, 21, 23,
         20, 22, 23,
     };
-    auto vert = std::vector(vertices, vertices + 16);
-    auto ind = std::vector(indices, indices + 24);
+    auto vert = std::vector(vertices, vertices + 24);
+    auto ind = std::vector(indices, indices + 36);
     return std::make_shared<Mesh>(vert, ind);
 }
 

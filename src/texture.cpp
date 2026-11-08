@@ -28,11 +28,12 @@ GLuint Texture::LoadSkybox(std::string path) {
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
 
     stbi_set_flip_vertically_on_load(false);
+
     std::string faceFiles[] = {
         "nx.png",
         "px.png",
-        "ny.png",
         "py.png",
+        "ny.png",
         "nz.png",
         "pz.png",
     };
@@ -41,6 +42,8 @@ GLuint Texture::LoadSkybox(std::string path) {
         auto facePath = path + "/" + faceFiles[i];
         int width, height, nrChannels;
         auto data = stbi_load(facePath.c_str(), &width, &height, &nrChannels, 0);
+
+
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
