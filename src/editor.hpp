@@ -8,6 +8,12 @@
 #include "generator.hpp"
 #include "scene_object.hpp"
 
+enum RenderPass {
+    Light,
+    Geometry,
+    PostProcess,
+};
+
 /**
  * Class representing editor functionality
  * Contains main event and render loops
@@ -44,6 +50,7 @@ class Editor {
     glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);
     bool _wireframe = false;    // Show wireframe of generated model
     int _bufferView = 0;
+    RenderPass _renderPass = RenderPass::Light;
 
     inline static std::shared_ptr<Editor> _instance;
 
@@ -75,6 +82,8 @@ public:
     static std::shared_ptr<Editor> InitSingleton(SDL_Window* window, SDL_GLContext context);
     static std::shared_ptr<Editor> GetInstance();
 
+    RenderPass GetRenderPass();
+
     /**
      * Converts polar coordinates (pitch, yaw, distance) to world space
      * @param polar polar coordinates (pitch, yaw, distance)
@@ -90,9 +99,9 @@ public:
     void RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader> postProcessShader);
 
     void RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid,
-                     std::shared_ptr<Shader> wallShader, Generator generator);
+                     Generator generator);
 
-    void RenderLightmap(std::shared_ptr<Mesh> floor, std::shared_ptr<Shader> lightShader, Generator generator);
+    void RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader, Generator generator);
 
     /**
      * Runs the editor

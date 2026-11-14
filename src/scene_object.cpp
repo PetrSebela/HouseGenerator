@@ -1,9 +1,7 @@
 #include "scene_object.hpp"
 
-#include <iostream>
-#include <ostream>
-
 #include "camera.hpp"
+#include "editor.hpp"
 
 void SceneObject::UpdateModelMatrix() {
     _modelMatrix = glm::identity<glm::mat4>();
@@ -17,7 +15,6 @@ void SceneObject::UpdateModelMatrix() {
 SceneObject::SceneObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Shader> shader) {
     _mesh = mesh;
     _shader = shader;
-    UpdateModelMatrix();
 }
 
 void SceneObject::SetMesh(std::shared_ptr<Mesh> mesh) {
@@ -30,21 +27,22 @@ void SceneObject::SetShader(std::shared_ptr<Shader> shader) {
 
 void SceneObject::SetPosition(glm::vec3 position) {
     _position = position;
-    UpdateModelMatrix();
 }
 
 void SceneObject::SetRotation(glm::vec3 rotation) {
     _rotation = rotation;
-    UpdateModelMatrix();
 }
 
 void SceneObject::SetScale(glm::vec3 scale) {
     _scale = scale;
-    UpdateModelMatrix();
 }
 
 void SceneObject::Draw() {
-    _shader->Bind();
-    _shader->SetMatrix4x4("model", _modelMatrix);
+    UpdateModelMatrix();
+
+    if (Editor::GetInstance()->GetRenderPass() == Geometry) {
+        _shader->Bind();
+    }
+    _shader->SetMatrix4x4Current("model", _modelMatrix);
     _mesh->Draw();
 }

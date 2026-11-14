@@ -95,7 +95,11 @@ void Shader::SetMatrix4x4(const char* name, glm::mat4 matrix) {
     Bind();
     auto uniform = glGetUniformLocation(_program, name);
     glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix[0][0]);
-    std::cout << "Setting matrix: " << uniform << "|"<< name << std::endl;
+}
+
+void Shader::SetMatrix4x4Current(const char *name, glm::mat4 matrix) {
+    auto uniform = glGetUniformLocation(_program, name);
+    glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix[0][0]);
 }
 
 void Shader::SetTexture2D(GLuint unit, GLuint texture) {
@@ -117,9 +121,7 @@ void Shader::SetInt(const char *name, int value) {
 }
 
 void Shader::SetGlobalMatrix4x4(const char *name, glm::mat4 matrix) {
-    std::cout << "Global" << std::endl;
     for (auto shader : _instances) {
         shader->SetMatrix4x4(name, matrix);
     }
-    std::cout << "End" << std::endl;
 }

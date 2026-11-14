@@ -169,11 +169,16 @@ std::shared_ptr<Editor> Editor::InitSingleton(SDL_Window *window, SDL_GLContext 
     if (_instance != nullptr) {
         throw std::runtime_error("Editor singleton is already initialized");
     }
-    return std::make_shared<Editor>(window, context);
+    _instance = std::make_shared<Editor>(window, context);
+    return _instance;
 }
 
 std::shared_ptr<Editor> Editor::GetInstance() {
     return _instance;
+}
+
+RenderPass Editor::GetRenderPass() {
+    return _renderPass;
 }
 
 glm::vec3 Editor::PolarToWorld(glm::vec3 polar) {
@@ -195,6 +200,7 @@ glm::vec2 Editor::GetCursorNDC() {
 }
 
 void Editor::RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader> postProcessShader) {
+    _renderPass = PostProcess;
     glEnable(GL_FRAMEBUFFER_SRGB);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, _windowWidth, _windowHeight);
@@ -205,7 +211,8 @@ void Editor::RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader>
     glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
-void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid, std::shared_ptr<Shader> wallShader, Generator generator) {
+void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid, Generator generator) {
+    _renderPass = Geometry;
     glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
     glViewport(0, 0, 4096, 2160);
     glEnable(GL_ALPHA_TEST);
@@ -224,27 +231,26 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
     grid.Draw();
 
     glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
-    wallShader->Bind(); // TODO: Convert generator to screen objects
     generator.Draw();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     _footprint->Draw();
 }
 
-void Editor::RenderLightmap(std::shared_ptr<Mesh> floor, std::shared_ptr<Shader> lightShader, Generator generator) {
+void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader, Generator generator) {
+    _renderPass = Light;
     glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
     glViewport(0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     lightShader->Bind();
-    floor->Draw();
+    lightShader->SetMatrix4x4("model", glm::identity<glm::mat4>());
     if (!_wireframe)
         generator.Draw();
+    grid.Draw();
 }
 
 void Editor::Run() {
-    auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
-    auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
     auto skyboxTexture = Texture::LoadSkybox("assets/textures/skybox");
 
     // Skybox setup
@@ -256,12 +262,6 @@ void Editor::Run() {
     auto floor = Mesh::Plane(150.0f);
     auto floorShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
     auto grid = SceneObject(floor, floorShader);
-
-
-    auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    wallShader->SetTexture2D(GL_TEXTURE1, brickAlbedo);
-    wallShader->SetTexture2D(GL_TEXTURE2, brickNormal);
-
 
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
@@ -289,8 +289,8 @@ void Editor::Run() {
         Shader::SetGlobalMatrix4x4("light", _shadowCamera->GetMatrix());
         Shader::SetGlobalMatrix4x4("view", _camera->GetMatrix());
 
-        RenderLightmap(floor, lightShader, generator);
-        RenderScene(skybox, skyboxShader, grid, wallShader, generator);
+        RenderLightmap(grid, lightShader, generator);
+        RenderScene(skybox, skyboxShader, grid, generator);
         RenderScreeQuad(quad, postProcessShader);
 
         DrawUI();

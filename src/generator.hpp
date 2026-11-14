@@ -3,6 +3,7 @@
 
 #include "camera.hpp"
 #include "mesh.hpp"
+#include "scene_object.hpp"
 #include "shader.hpp"
 #include "glm/glm.hpp"
 #include "segment.hpp"
@@ -15,14 +16,16 @@ class Generator {
 
     // TMP variables for debug before deciding on model structure
     // std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    std::shared_ptr<Mesh> _walls;
+    // std::shared_ptr<Mesh> _walls;
+
+    std::shared_ptr<SceneObject> _wall = std::make_shared<SceneObject>();
 
 public:
     // Building parameters
     float Levels = 1;           // Number of stories
     float LevelHeight = 2.4f;   // Story height in meters
 
-    Generator() = default;
+    Generator();
     ~Generator() = default;
 
     /**

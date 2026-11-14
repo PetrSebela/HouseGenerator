@@ -50,4 +50,6 @@ void main() {
         FragColor = vec4(position, 1);
     else if(bufferView == 3)
         FragColor = vec4(normalDebug, 1);
+    else if(bufferView == 4)
+        FragColor = texture(shadowMap, UV);
 }

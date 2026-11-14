@@ -5,6 +5,16 @@
 
 #include "camera.hpp"
 #include "geometry.hpp"
+#include "texture.hpp"
+
+Generator::Generator() {
+    auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
+    auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
+    auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
+    wallShader->SetTexture2D(GL_TEXTURE1, brickAlbedo);
+    wallShader->SetTexture2D(GL_TEXTURE2, brickNormal);
+    _wall->SetShader(wallShader);
+}
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {
     _footprint.clear();
@@ -33,9 +43,11 @@ void Generator::RefreshModel() {
     auto root = geo::BridgeSegments(raised, roof);
     auto innerWall = geo::BridgeSegments( roof, baseInset);
     auto a = Mesh::Join(wall, root);
-    _walls = Mesh::Join(innerWall, a);
+
+    auto wallMesh = Mesh::Join(innerWall, a);
+    _wall->SetMesh(wallMesh);
 }
 
 void Generator::Draw() {
-    _walls->Draw();
+    _wall->Draw();
 }

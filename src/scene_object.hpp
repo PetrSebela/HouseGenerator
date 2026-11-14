@@ -18,6 +18,7 @@ class SceneObject {
 
 public:
     SceneObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Shader> shader);
+    SceneObject() = default;
     ~SceneObject() = default;
     void SetMesh(std::shared_ptr<Mesh> mesh);
     void SetShader(std::shared_ptr<Shader> shader);
