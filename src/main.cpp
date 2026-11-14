@@ -11,7 +11,7 @@ int main() {
     SDL_GL_SetSwapInterval(0);
     gladLoadGL(SDL_GL_GetProcAddress);
 
-    Editor editor(window, context);
-    editor.Run();
+    auto editor = Editor::InitSingleton(window, context);
+    editor->Run();
     return 0;
 }

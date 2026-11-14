@@ -14,9 +14,18 @@ void SceneObject::UpdateModelMatrix() {
     _modelMatrix = glm::scale(_modelMatrix, _scale);
 }
 
-SceneObject::SceneObject(std::shared_ptr<Mesh> mesh) {
+SceneObject::SceneObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Shader> shader) {
     _mesh = mesh;
+    _shader = shader;
     UpdateModelMatrix();
+}
+
+void SceneObject::SetMesh(std::shared_ptr<Mesh> mesh) {
+    _mesh = mesh;
+}
+
+void SceneObject::SetShader(std::shared_ptr<Shader> shader) {
+    _shader = shader;
 }
 
 void SceneObject::SetPosition(glm::vec3 position) {
@@ -34,8 +43,8 @@ void SceneObject::SetScale(glm::vec3 scale) {
     UpdateModelMatrix();
 }
 
-void SceneObject::Draw(Camera camera, Shader &shader) {
-    shader.SetMatrix4x4("model", _modelMatrix);
-    shader.SetMatrix4x4("view", camera.GetMatrix());
+void SceneObject::Draw() {
+    _shader->Bind();
+    _shader->SetMatrix4x4("model", _modelMatrix);
     _mesh->Draw();
 }

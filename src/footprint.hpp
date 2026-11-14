@@ -39,9 +39,8 @@ public:
 
     /**
      * Draws handles and outline
-     * @param camera Camera which should be used for drawing said objects
      */
-    void Draw(Camera& camera);
+    void Draw();
 
     /**
      * @return Returns position of control points

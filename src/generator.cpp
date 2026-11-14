@@ -36,6 +36,6 @@ void Generator::RefreshModel() {
     _walls = Mesh::Join(innerWall, a);
 }
 
-void Generator::Draw(Camera camera) {
+void Generator::Draw() {
     _walls->Draw();
 }

@@ -9,11 +9,11 @@ layout(binding=3) uniform sampler2D shadowMap;
 
 
 uniform int bufferView = 0;
-uniform mat4 lightSpaceTransform = mat4(1);
+uniform mat4 light = mat4(1);
 
 float inShadow(vec3 worldPos)
 {
-    vec3 lightPos = (lightSpaceTransform * vec4(worldPos, 1)).xyz;
+    vec3 lightPos = (light * vec4(worldPos, 1)).xyz;
     if (abs(lightPos.x) > 0.99 || abs(lightPos.y) > 0.99)
         return 1;
 

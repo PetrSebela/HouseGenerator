@@ -12,12 +12,8 @@ glm::vec3 Handle::GetPosition() {
     return _position;
 }
 
-void Handle::Draw(Camera camera) {
-    _shader.Bind();
-    _shader.SetMatrix4x4("model", glm::translate(glm::identity<glm::mat4>(), _position));
-
-    auto cameraMatrix = camera.GetMatrix();
-    _shader.SetMatrix4x4("view", cameraMatrix);
-
+void Handle::Draw() {
+    _shader->Bind();
+    _shader->SetMatrix4x4("model", glm::translate(glm::identity<glm::mat4>(), _position));
     _mesh->Draw();
 }

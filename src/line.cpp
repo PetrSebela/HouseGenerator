@@ -18,11 +18,11 @@ void Line::SetLoop(bool loop) {
     _isLoop = loop;
 }
 
-void Line::Draw(Camera camera) {
-    _shader.Bind();
-    _shader.SetMatrix4x4("model", glm::identity<glm::mat4>());
-    auto cameraMatrix = camera.GetMatrix();
-    _shader.SetMatrix4x4("view", cameraMatrix);
+void Line::Draw() {
+    // _shader->SetMatrix4x4("model", glm::identity<glm::mat4>());
+    // auto cameraMatrix = camera.GetMatrix();
+    // _shader->SetMatrix4x4("view", cameraMatrix);
+    _shader->Bind();
     _mesh->Draw();
 }
 

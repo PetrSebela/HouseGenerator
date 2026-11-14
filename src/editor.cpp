@@ -165,6 +165,17 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     SetupBuffers();
 }
 
+std::shared_ptr<Editor> Editor::InitSingleton(SDL_Window *window, SDL_GLContext context) {
+    if (_instance != nullptr) {
+        throw std::runtime_error("Editor singleton is already initialized");
+    }
+    return std::make_shared<Editor>(window, context);
+}
+
+std::shared_ptr<Editor> Editor::GetInstance() {
+    return _instance;
+}
+
 glm::vec3 Editor::PolarToWorld(glm::vec3 polar) {
     auto horizontal = glm::angleAxis(glm::radians(polar.x), glm::vec3(0, 1, 0));
     auto vertical = glm::angleAxis(glm::radians(polar.y), glm::vec3(1, 0, 0));
@@ -183,6 +194,54 @@ glm::vec2 Editor::GetCursorNDC() {
     };
 }
 
+void Editor::RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader> postProcessShader) {
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, _windowWidth, _windowHeight);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    postProcessShader->Bind();
+    postProcessShader->SetInt("bufferView", _bufferView);
+    quad->Draw();
+    glDisable(GL_FRAMEBUFFER_SRGB);
+}
+
+void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid, std::shared_ptr<Shader> wallShader, Generator generator) {
+    glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
+    glViewport(0, 0, 4096, 2160);
+    glEnable(GL_ALPHA_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Render skybox
+    glDepthMask(GL_FALSE);
+    skyboxShader->Bind();
+    skyboxShader->SetMatrix4x4("view", _camera->GetProjectionMatrix());
+    skybox->Draw();
+    glDepthMask(GL_TRUE);
+
+    grid.Draw();
+
+    glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
+    wallShader->Bind(); // TODO: Convert generator to screen objects
+    generator.Draw();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    _footprint->Draw();
+}
+
+void Editor::RenderLightmap(std::shared_ptr<Mesh> floor, std::shared_ptr<Shader> lightShader, Generator generator) {
+    glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
+    glViewport(0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    lightShader->Bind();
+    floor->Draw();
+    if (!_wireframe)
+        generator.Draw();
+}
+
 void Editor::Run() {
     auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
     auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
@@ -190,18 +249,19 @@ void Editor::Run() {
 
     // Skybox setup
     auto skybox = Mesh::Cube();
-    auto skyboxShader = Shader("assets/shaders/default.vert", "assets/shaders/skybox.frag");
-    skyboxShader.SetTexture2D(GL_TEXTURE0, skyboxTexture);
+    auto skyboxShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/skybox.frag");
+    skyboxShader->SetTexture2D(GL_TEXTURE0, skyboxTexture);
 
     // Grid setup
     auto floor = Mesh::Plane(150.0f);
-    auto grid = SceneObject(floor);
+    auto floorShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
+    auto grid = SceneObject(floor, floorShader);
 
-    Shader floorShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
 
-    Shader wallShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    wallShader.SetTexture2D(GL_TEXTURE1, brickAlbedo);
-    wallShader.SetTexture2D(GL_TEXTURE2, brickNormal);
+    auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
+    wallShader->SetTexture2D(GL_TEXTURE1, brickAlbedo);
+    wallShader->SetTexture2D(GL_TEXTURE2, brickNormal);
+
 
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
@@ -209,12 +269,12 @@ void Editor::Run() {
     SDL_GetWindowSize(_window, &_windowWidth, &_windowHeight);
 
     auto quad = Mesh::Quad();
-    Shader lightShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
-    Shader postProcessShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
-    postProcessShader.SetTexture2D(GL_TEXTURE0, _albedoTexture);
-    postProcessShader.SetTexture2D(GL_TEXTURE1, _normalTexture);
-    postProcessShader.SetTexture2D(GL_TEXTURE2, _positionTexture);
-    postProcessShader.SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
+    auto lightShader = Shader::LoadShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
+    auto postProcessShader = Shader::LoadShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
+    postProcessShader->SetTexture2D(GL_TEXTURE0, _albedoTexture);
+    postProcessShader->SetTexture2D(GL_TEXTURE1, _normalTexture);
+    postProcessShader->SetTexture2D(GL_TEXTURE2, _positionTexture);
+    postProcessShader->SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
     Generator generator;
 
     _running = true;
@@ -222,62 +282,16 @@ void Editor::Run() {
         _eventSystem->ProcessEvents();
         generator.SetFootprint(_footprint->GetOutline());
 
-        // Shadow
-        glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
-        glViewport(0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
-        glClear(GL_DEPTH_BUFFER_BIT);
-
-        lightShader.Bind();
-        lightShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
-        floor->Draw();
-        if (!_wireframe)
-            generator.Draw(*_shadowCamera);
-
-        // Render geometry buffers
-        glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
-        glViewport(0, 0, 4096, 2160);
-        glEnable(GL_ALPHA_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         auto pos = PolarToWorld(_cameraOrbitPosition) + _cameraCenter;
         _camera->SetPosition(pos);
         _camera->LookAt(_cameraCenter);
 
-        glDepthMask(GL_FALSE);
-        skyboxShader.Bind();
+        Shader::SetGlobalMatrix4x4("light", _shadowCamera->GetMatrix());
+        Shader::SetGlobalMatrix4x4("view", _camera->GetMatrix());
 
-        skyboxShader.SetMatrix4x4("view", _camera->GetProjectionMatrix());
-        skybox->Draw();
-        glDepthMask(GL_TRUE);
-
-        floorShader.Bind();
-        floorShader.SetMatrix4x4("view", _camera->GetMatrix());
-        floorShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
-        floor->Draw();
-
-        glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
-        wallShader.Bind();
-        wallShader.SetMatrix4x4("view", _camera->GetMatrix());
-        wallShader.SetMatrix4x4("light", _shadowCamera->GetMatrix());
-        generator.Draw(*_camera);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        _footprint->Draw(*_camera);
-
-        // Render frame to screen with post processing
-        glEnable(GL_FRAMEBUFFER_SRGB);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, _windowWidth, _windowHeight);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        postProcessShader.Bind();
-        postProcessShader.SetMatrix4x4("lightSpaceTransform", _shadowCamera->GetMatrix());
-        postProcessShader.SetInt("bufferView", _bufferView);
-        quad->Draw();
-        glDisable(GL_FRAMEBUFFER_SRGB);
+        RenderLightmap(floor, lightShader, generator);
+        RenderScene(skybox, skyboxShader, grid, wallShader, generator);
+        RenderScreeQuad(quad, postProcessShader);
 
         DrawUI();
         SDL_GL_SwapWindow(_window);

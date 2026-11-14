@@ -5,6 +5,8 @@
 #include "camera.hpp"
 #include "event_system.hpp"
 #include "footprint.hpp"
+#include "generator.hpp"
+#include "scene_object.hpp"
 
 /**
  * Class representing editor functionality
@@ -43,6 +45,8 @@ class Editor {
     bool _wireframe = false;    // Show wireframe of generated model
     int _bufferView = 0;
 
+    inline static std::shared_ptr<Editor> _instance;
+
     /**
      * Registers editor callback with event system (unregistration is handled by deleting event system ┐(´～`)┌ )
      */
@@ -66,7 +70,10 @@ public:
 
     Editor(SDL_Window* window, SDL_GLContext context);
     Editor() = default;
-    ~Editor() = default; // No need to free the opengl buffers, the OS will take care of them right(・・;)?
+    ~Editor() = default; // No need to free the opengl buffers, the OS will take care of them. Right? (・・;)
+
+    static std::shared_ptr<Editor> InitSingleton(SDL_Window* window, SDL_GLContext context);
+    static std::shared_ptr<Editor> GetInstance();
 
     /**
      * Converts polar coordinates (pitch, yaw, distance) to world space
@@ -79,6 +86,13 @@ public:
      * @return Cursor position in NDC
      */
     glm::vec2 GetCursorNDC();
+
+    void RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader> postProcessShader);
+
+    void RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid,
+                     std::shared_ptr<Shader> wallShader, Generator generator);
+
+    void RenderLightmap(std::shared_ptr<Mesh> floor, std::shared_ptr<Shader> lightShader, Generator generator);
 
     /**
      * Runs the editor

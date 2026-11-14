@@ -12,7 +12,7 @@
 class Handle {
     glm::vec3 _position = glm::vec3(0.0f);          // Handle position
     std::shared_ptr<Mesh> _mesh = Mesh::Plane(1.0f);  // Handle visualization mesh
-    Shader _shader = Shader("assets/shaders/default.vert", "assets/shaders/handle.frag");   // Handle shader
+    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/handle.frag");   // Handle shader
 
 public:
     Handle() = default;
@@ -41,5 +41,5 @@ public:
     /**
      * Draws handle using provided camera
      */
-    void Draw(Camera camera);
+    void Draw();
 };

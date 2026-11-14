@@ -1,5 +1,6 @@
 #include "shader.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <sstream>
 #include <fstream>
@@ -7,9 +8,7 @@
 
 #include "glm/gtc/type_ptr.hpp"
 
-GLuint Shader::bound;
-
-GLuint Shader::LoadShader(std::string path, GLuint type) {
+GLuint Shader::LoadShaderFromFile(std::string path, GLuint type) {
     if (!std::filesystem::exists(path)) {
         auto current = std::filesystem::current_path();
         std::cout << current << std::endl;
@@ -38,12 +37,19 @@ GLuint Shader::LoadShader(std::string path, GLuint type) {
 
     glUseProgram(shader);
     bound = shader;
+
     return shader;
 }
 
-Shader::Shader(std::string vsPath, std::string fsPath) {
-    GLuint vertexShader = LoadShader(vsPath, GL_VERTEX_SHADER);
-    GLuint fragmentShader = LoadShader(fsPath, GL_FRAGMENT_SHADER);
+std::shared_ptr<Shader> Shader::LoadShader(std::string vsPath, std::string fsPath) {
+    auto shader = std::shared_ptr<Shader>(new Shader(vsPath, fsPath));
+    _instances.push_back(shader);
+    return shader;
+}
+
+Shader::Shader(std::string vsPath, std::string fsPath) : Shader(){
+    GLuint vertexShader = LoadShaderFromFile(vsPath, GL_VERTEX_SHADER);
+    GLuint fragmentShader = LoadShaderFromFile(fsPath, GL_FRAGMENT_SHADER);
 
     _program = glCreateProgram();
     glAttachShader(_program, vertexShader);
@@ -61,6 +67,15 @@ Shader::Shader(std::string vsPath, std::string fsPath) {
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    std::cout << "Loaded shader:" << fsPath << " | "<< _instances.size() << std::endl;
+}
+
+
+void Shader::Discard() {
+    // _instances.erase(std::remove_if(_instances.begin(), _instances.end(), [this](Shader& shader) {
+    //     return shader._program == _program;
+    // }), _instances.end());
 }
 
 void Shader::Bind() {
@@ -70,7 +85,7 @@ void Shader::Bind() {
     bound = _program;
     glUseProgram(_program);
 
-    for (auto texture: textures) {
+    for (auto texture: _textures) {
         glActiveTexture(texture.first);
         glBindTexture(GL_TEXTURE_2D, texture.second);
     }
@@ -80,12 +95,13 @@ void Shader::SetMatrix4x4(const char* name, glm::mat4 matrix) {
     Bind();
     auto uniform = glGetUniformLocation(_program, name);
     glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix[0][0]);
+    std::cout << "Setting matrix: " << uniform << "|"<< name << std::endl;
 }
 
 void Shader::SetTexture2D(GLuint unit, GLuint texture) {
     glActiveTexture(unit);
     glBindTexture(GL_TEXTURE_2D, texture);
-    textures[unit] = texture;
+    _textures[unit] = texture;
 }
 
 void Shader::SetFloat(const char *name, float value) {
@@ -98,4 +114,12 @@ void Shader::SetInt(const char *name, int value) {
     Bind();
     auto uniform = glGetUniformLocation(_program, name);
     glUniform1i(uniform, value);
+}
+
+void Shader::SetGlobalMatrix4x4(const char *name, glm::mat4 matrix) {
+    std::cout << "Global" << std::endl;
+    for (auto shader : _instances) {
+        shader->SetMatrix4x4(name, matrix);
+    }
+    std::cout << "End" << std::endl;
 }

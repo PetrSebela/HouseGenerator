@@ -10,7 +10,7 @@
  */
 class Line {
     std::shared_ptr<Mesh> _mesh = std::make_shared<Mesh>(); // Line mesh
-    Shader _shader = Shader("assets/shaders/default.vert","assets/shaders/color.frag"); // Line shader
+    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert","assets/shaders/color.frag"); // Line shader
     bool _isLoop = false;   // If line should form a loop
 public:
     Line() = default;
@@ -26,7 +26,7 @@ public:
     /**
      * Draw line using provided camera
      */
-    void Draw(Camera camera);
+    void Draw();
 
     /**
      * Set line points

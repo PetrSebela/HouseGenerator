@@ -110,10 +110,10 @@ Footprint::Footprint(Editor* editor) {
     UpdateLine();
 }
 
-void Footprint::Draw(Camera& camera) {
+void Footprint::Draw() {
     for (auto handle : _handles)
-        handle.Draw(camera);
-    _outline.Draw(camera);
+        handle.Draw();
+    _outline.Draw();
 }
 
 std::vector<glm::vec3> Footprint::GetOutline() {

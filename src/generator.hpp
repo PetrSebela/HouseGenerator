@@ -14,7 +14,7 @@ class Generator {
     std::vector<Segment> _footprint; // Base building footprint segments
 
     // TMP variables for debug before deciding on model structure
-    Shader _shader = Shader("assets/shaders/default.vert", "assets/shaders/wall.frag");
+    // std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
     std::shared_ptr<Mesh> _walls;
 
 public:
@@ -38,7 +38,6 @@ public:
 
     /**
      * Draws building model
-     * @param camera Camera used for rendering
      */
-    void Draw(Camera camera);
+    void Draw();
 };
