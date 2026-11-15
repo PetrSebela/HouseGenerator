@@ -14,6 +14,14 @@ enum RenderPass {
     PostProcess,
 };
 
+enum BufferView {
+    Composite,
+    Normal,
+    Position,
+    Depth,
+    ShadowMap,
+};
+
 /**
  * Class representing editor functionality
  * Contains main event and render loops
@@ -45,11 +53,13 @@ class Editor {
     int _windowHeight;          // Window height
     bool _running = false;      // If editor is running
     bool _cameraPan = false;    // If camera is panning (lmb down)
+    bool _wireframe = false;    // Show wireframe of generated model
     double _lastFrameTime;      // Time at start of last frame
+
     glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, -10.0f, 15.0f);
     glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);
-    bool _wireframe = false;    // Show wireframe of generated model
-    int _bufferView = 0;
+
+    BufferView _bufferView = Composite;
     RenderPass _renderPass = RenderPass::Light;
 
     inline static std::shared_ptr<Editor> _instance;

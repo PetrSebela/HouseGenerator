@@ -86,8 +86,8 @@ void Editor::DrawUI() {
     ImGui::Checkbox("Snap to grid", &_footprint->SnapToGrid);
     ImGui::SliderFloat("Grid size", &_footprint->GridSize, 0.01, 1.0f);
 
-    const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Stencil"};
-    ImGui::Combo("Buffer view", &_bufferView, items, 5);
+    const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Depth", "Shadow"};
+    ImGui::Combo("Buffer view", (int*)&_bufferView, items, 6);
 
     ImGui::End();
 
@@ -112,11 +112,14 @@ void Editor::SetupBuffers() {
     GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(3, buffers);
 
-    // Depth buffer setup
-    glGenRenderbuffers(1, &_depthBuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, _depthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 4096, 2160);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depthBuffer);
+    glGenTextures(1, &_depthBuffer);
+    glBindTexture(GL_TEXTURE_2D, _depthBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 4096, 2160, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depthBuffer, 0);
 
     // Shadows
     glGenFramebuffers(1, &_shadowMapFBO);
@@ -262,7 +265,6 @@ void Editor::Run() {
     auto floor = Mesh::Plane(150.0f);
     auto floorShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
     auto grid = SceneObject(floor, floorShader);
-
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
 
@@ -274,7 +276,8 @@ void Editor::Run() {
     postProcessShader->SetTexture2D(GL_TEXTURE0, _albedoTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE1, _normalTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE2, _positionTexture);
-    postProcessShader->SetTexture2D(GL_TEXTURE3, _shadowMapTexture);
+    postProcessShader->SetTexture2D(GL_TEXTURE3, _depthBuffer);
+    postProcessShader->SetTexture2D(GL_TEXTURE4, _shadowMapTexture);
     Generator generator;
 
     _running = true;

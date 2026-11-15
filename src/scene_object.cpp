@@ -40,9 +40,12 @@ void SceneObject::SetScale(glm::vec3 scale) {
 void SceneObject::Draw() {
     UpdateModelMatrix();
 
+    // I would say this is kinda hacky
+    // This violates shader bind model, but lets think of it as overloading
     if (Editor::GetInstance()->GetRenderPass() == Geometry) {
         _shader->Bind();
     }
+
     _shader->SetMatrix4x4Current("model", _modelMatrix);
     _mesh->Draw();
 }

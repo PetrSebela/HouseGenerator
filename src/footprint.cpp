@@ -117,5 +117,11 @@ void Footprint::Draw() {
 }
 
 std::vector<glm::vec3> Footprint::GetOutline() {
-    return _points;
+    std::vector<glm::vec3> points;
+    for (const auto point: _points) {
+        auto flat = point;
+        flat.y = 0;
+        points.push_back(flat);
+    }
+    return points;
 }

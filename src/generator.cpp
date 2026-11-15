@@ -14,6 +14,7 @@ Generator::Generator() {
     wallShader->SetTexture2D(GL_TEXTURE1, brickAlbedo);
     wallShader->SetTexture2D(GL_TEXTURE2, brickNormal);
     _wall->SetShader(wallShader);
+    _wall->SetPosition(glm::vec3(0.0f, -0.0f, 0.0f));
 }
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {

@@ -5,7 +5,8 @@ out vec4 FragColor;
 layout(binding=0) uniform sampler2D albedoMap;
 layout(binding=1) uniform sampler2D normalMap;
 layout(binding=2) uniform sampler2D positionMap;
-layout(binding=3) uniform sampler2D shadowMap;
+layout(binding=3) uniform sampler2D depthMap;
+layout(binding=4) uniform sampler2D shadowMap;
 
 
 uniform int bufferView = 0;
@@ -24,10 +25,19 @@ float inShadow(vec3 worldPos)
     return 1;
 }
 
+float ToLinearDepth(float depth)
+{
+    float near = 0.1;
+    float far = 500;
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
 void main() {
     vec3 albedo = texture(albedoMap, UV).xyz;
     vec3 position = texture(positionMap, UV).xyz;
     vec3 normal = texture(normalMap, UV).xyz;
+    float depth = ToLinearDepth(texture(depthMap, UV).r);
 
     normal = normalize(normal);
     vec3 normalDebug = normal * 0.5 + 0.5;
@@ -51,5 +61,7 @@ void main() {
     else if(bufferView == 3)
         FragColor = vec4(normalDebug, 1);
     else if(bufferView == 4)
+        FragColor = vec4(depth / 500, depth / 500, depth / 500, 1);
+    else if(bufferView == 5)
         FragColor = texture(shadowMap, UV);
 }
