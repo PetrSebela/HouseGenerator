@@ -12,26 +12,9 @@ in struct VertexOut{
     vec3 lightSpacePosition;
 } frag;
 
-//in vec3 fragWorldPosition;
-//in vec3 fragLightPosition;
-//in vec2 vertUV;
-//in vec3 vertNormal;
-
 layout(location=0) out vec4 FragColor;
 layout(location=1) out vec4 FragNormal;
 layout(location=2) out vec4 FragPosition;
-
-float shadow(vec3 lightPos)
-{
-    if (abs(lightPos.x) > 1 || abs(lightPos.y) > 1)
-        return 0;
-
-    float bias = 0.0001;
-    vec2 texCoords = (lightPos.xy + vec2(1,1) ) / 2;
-    if((lightPos.z + 1) / 2 > texture(shadowMap, texCoords.xy).r + bias)
-        return 1;
-    return 0;
-}
 
 void main() {
 
@@ -42,9 +25,7 @@ void main() {
     vec3 normal = texture(normalMap, frag.uv).rgb;
     normal = -normalize(normal * 2.0 - 1.0);
     vec3 mappedNormal = TBN * normal;
-    float intensity = max(dot(mappedNormal, normalize(-vec3(1,1,1))), 0) * (1 - shadow(frag.lightSpacePosition));
-    float ambient = 0.25 + 0.25 * intensity;
-    vec4 albedo = texture(albedoMap, frag.uv);
+
 
     FragColor = pow(texture(albedoMap, frag.uv),vec4(1.6));
     FragNormal = vec4(mappedNormal, 1);

@@ -1,8 +1,8 @@
 #pragma once
-#include "mesh.hpp"
+#include "renderer/mesh.hpp"
 #include "glm/glm.hpp"
 #include "segment.hpp"
-#include "vertex.hpp"
+#include "renderer/vertex.hpp"
 
 // Collection of function for manipulating geometry (basically blender operations)
 namespace geo {

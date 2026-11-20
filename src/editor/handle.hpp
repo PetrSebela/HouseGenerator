@@ -1,9 +1,9 @@
 #pragma once
 #include <memory>
 
-#include "camera.hpp"
-#include "mesh.hpp"
-#include "shader.hpp"
+#include "renderer/camera.hpp"
+#include "renderer/mesh.hpp"
+#include "renderer/shader.hpp"
 #include "glm/vec3.hpp"
 
 /**

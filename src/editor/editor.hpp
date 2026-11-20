@@ -2,11 +2,11 @@
 
 #include <memory>
 #include <SDL3/SDL.h>
-#include "camera.hpp"
+#include "renderer/camera.hpp"
 #include "event_system.hpp"
 #include "footprint.hpp"
-#include "generator.hpp"
-#include "scene_object.hpp"
+#include "generator/generator.hpp"
+#include "renderer/scene_object.hpp"
 
 enum RenderPass {
     Light,

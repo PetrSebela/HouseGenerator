@@ -1,7 +1,7 @@
 #include "scene_object.hpp"
 
 #include "camera.hpp"
-#include "editor.hpp"
+#include "editor/editor.hpp"
 
 void SceneObject::UpdateModelMatrix() {
     _modelMatrix = glm::identity<glm::mat4>();

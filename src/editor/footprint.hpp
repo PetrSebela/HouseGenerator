@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "handle.hpp"
-#include "line.hpp"
+#include "renderer/line.hpp"
 #include "glm/vec3.hpp"
 
 // To resolve circular dependency

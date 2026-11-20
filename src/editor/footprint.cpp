@@ -4,7 +4,7 @@
 #include <ostream>
 
 #include "editor.hpp"
-#include "geometry.hpp"
+#include "generator/geometry.hpp"
 
 void Footprint::UpdateLine() {
     _points.clear();

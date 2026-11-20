@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "editor.hpp"
+#include "editor/editor.hpp"
 
 int main() {
     SDL_Init(SDL_INIT_VIDEO);

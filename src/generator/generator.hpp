@@ -1,10 +1,10 @@
 #pragma once
 #include <vector>
 
-#include "camera.hpp"
-#include "mesh.hpp"
-#include "scene_object.hpp"
-#include "shader.hpp"
+#include "renderer/camera.hpp"
+#include "renderer/mesh.hpp"
+#include "renderer/scene_object.hpp"
+#include "renderer/shader.hpp"
 #include "glm/glm.hpp"
 #include "segment.hpp"
 
@@ -13,11 +13,6 @@
  */
 class Generator {
     std::vector<Segment> _footprint; // Base building footprint segments
-
-    // TMP variables for debug before deciding on model structure
-    // std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    // std::shared_ptr<Mesh> _walls;
-
     std::shared_ptr<SceneObject> _wall = std::make_shared<SceneObject>();
 
 public:
@@ -25,6 +20,9 @@ public:
     float Levels = 1;           // Number of stories
     float LevelHeight = 2.4f;   // Story height in meters
 
+    float FoundationHeight = 0.4f;
+
+    
     Generator();
     ~Generator() = default;
 

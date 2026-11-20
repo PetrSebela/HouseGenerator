@@ -18,7 +18,7 @@ float inShadow(vec3 worldPos)
     if (abs(lightPos.x) > 0.99 || abs(lightPos.y) > 0.99)
         return 1;
 
-    float bias = 0.00001;
+    float bias = 0.0001;
     vec2 texCoords = (lightPos.xy + vec2(1,1)) / 2;
     if((lightPos.z + 1) / 2 > texture(shadowMap, texCoords.xy).r + bias)
         return 0;

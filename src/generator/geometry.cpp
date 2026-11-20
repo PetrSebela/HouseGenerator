@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-#include "line.hpp"
+#include "renderer/line.hpp"
 
 glm::vec3 geo::ClosestPointOnLine(glm::vec3 a, glm::vec3 b, glm::vec3 point) {
     auto segmentLength = distance(a, b);

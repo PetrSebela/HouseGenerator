@@ -5,16 +5,15 @@
 #include <imgui.h>
 #include <iostream>
 
-#include "../external/imgui/backends/imgui_impl_sdl3.h"
-#include "../external/imgui/backends/imgui_impl_opengl3.h"
+#include "../../external/imgui/backends/imgui_impl_sdl3.h"
+#include "../../external/imgui/backends/imgui_impl_opengl3.h"
 
-#include "vertex.hpp"
-#include "shader.hpp"
+#include "renderer/shader.hpp"
 #include "texture.hpp"
-#include "mesh.hpp"
+#include "renderer/mesh.hpp"
 #include "scene_object.hpp"
 #include "event_system.hpp"
-#include "generator.hpp"
+#include "generator/generator.hpp"
 
 void Editor::RegisterCallbacks() {
     _eventSystem->RegisterEvent(SDL_EVENT_QUIT, [this](auto &&) { _running = false; return false; });
