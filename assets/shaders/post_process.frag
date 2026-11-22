@@ -43,7 +43,7 @@ void main() {
     vec3 normalDebug = normal * 0.5 + 0.5;
     vec3 sunDirection = normalize(vec3(9,12,15));
 
-    float intensity = inShadow(position) * max(dot(normal, sunDirection), 0);
+    float intensity = inShadow(position) * max(dot(sunDirection, normal), 0);
 
     // Hacky skybox detection
     // TODO: remove

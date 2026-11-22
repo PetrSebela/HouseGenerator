@@ -8,6 +8,8 @@ int main() {
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
     auto window = SDL_CreateWindow("House generator", 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     auto context = SDL_GL_CreateContext(window);
+
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
     SDL_GL_SetSwapInterval(0);
     gladLoadGL(SDL_GL_GetProcAddress);
 

@@ -34,7 +34,8 @@ file(GLOB HOUSE_GENERATOR_SRC
         src/*.cpp src/*.hpp
         src/editor/*.cpp src/editor/*.hpp
         src/generator/*.cpp src/generator/*.hpp
-        src/renderer/*.cpp src/renderer/*.hpp)
+        src/renderer/*.cpp src/renderer/*.hpp
+        src/generator/roof/*.cpp src/generator/roof/*.hpp)
 add_executable(HouseGenerator ${HOUSE_GENERATOR_SRC})
 target_link_libraries(ImGui PUBLIC SDL3::SDL3 OpenGL::GL)
 target_link_libraries(HouseGenerator PRIVATE ImGui SDL3::SDL3 OpenGL::GL glad glm)

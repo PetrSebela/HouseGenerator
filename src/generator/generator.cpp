@@ -1,23 +1,32 @@
 #include "generator.hpp"
 
-#include <iostream>
-#include <ostream>
-
+#include "extruder.hpp"
 #include "renderer/camera.hpp"
 #include "geometry.hpp"
+#include "roof/roof.hpp"
+#include "roof/flat_roof.hpp"
 #include "renderer/texture.hpp"
 
 Generator::Generator() {
-
-    auto brickAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
-    auto brickNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
+    auto plasterAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
+    auto plasterNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
     auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    wallShader->SetTexture2D(GL_TEXTURE1, brickAlbedo);
-    wallShader->SetTexture2D(GL_TEXTURE2, brickNormal);
-
-
+    wallShader->SetTexture2D(GL_TEXTURE1, plasterAlbedo);
+    wallShader->SetTexture2D(GL_TEXTURE2, plasterNormal);
     _wall->SetShader(wallShader);
-    _wall->SetPosition(glm::vec3(0.0f, -0.0f, 0.0f));
+
+    auto concreteAlbedo = Texture::LoadTexture("assets/textures/concrete/albedo.jpg");
+    auto concreteNormal = Texture::LoadTexture("assets/textures/concrete/normal.jpg");
+    auto foundationShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
+    foundationShader->SetTexture2D(GL_TEXTURE1, concreteAlbedo);
+    foundationShader->SetTexture2D(GL_TEXTURE2, concreteNormal);
+
+    _foundation->SetShader(foundationShader);
+
+    // TODO: add propper roof tile material
+    _roof->SetShader(wallShader);
+
+    _roofGenerator = std::make_shared<FlatRoof>();
 }
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {
@@ -32,28 +41,27 @@ void Generator::SetFootprint(std::vector<glm::vec3> footprint) {
 }
 
 void Generator::RefreshModel() {
+    Extruder foundation(_footprint);
+    foundation.Extrude(glm::vec2(0, FoundationHeight));
+    foundation.Extrude(glm::vec2(0.2, 0));
+    foundation.Extrude(glm::vec2(0, -FoundationHeight));
 
-    auto foundationOuterEdge = _footprint;
-    foundationOuterEdge = geo::ConnectNeighbours(foundationOuterEdge, true);
-    auto foundationOuterEdgeTop = geo::Raise(foundationOuterEdge, FoundationHeight);
+    auto foundationSet = foundation.GetWallSet();
+    _foundation->SetMesh(foundationSet.GetMesh());
 
-    auto foundationInnerEdge = geo::Inset(foundationOuterEdge, 0.2);
-    foundationInnerEdge = geo::ConnectNeighbours(foundationInnerEdge, true);
-    auto foundationInnerEdgeTop = geo::Raise(foundationInnerEdge, FoundationHeight);
+    Extruder wall(_footprint);
+    wall.MoveHead(glm::vec2(0.1, FoundationHeight));
+    wall.Extrude(glm::vec2(0, LevelHeight));
+    auto wallSet = wall.GetWallSet();
+    _wall->SetMesh(wallSet.GetMesh());
 
-
-    auto foundationSideOuter = geo::BridgeSegments(foundationOuterEdge, foundationOuterEdgeTop);
-    auto foundationSideInner = geo::BridgeSegments(foundationInnerEdgeTop, foundationInnerEdge);
-    auto foundationTop = geo::BridgeSegments(foundationOuterEdgeTop, foundationInnerEdgeTop);
-
-    auto foundationMesh = Mesh::Join(foundationSideOuter, foundationTop);
-    foundationMesh = Mesh::Join(foundationMesh, foundationSideInner);
-
-
-
-    _wall->SetMesh(foundationMesh);
+    auto roofPerimeter = wall.GetExtruderHead();
+    _roofGenerator->SetPerimeter(roofPerimeter);
+    _roof->SetMesh(_roofGenerator->GetMesh());
 }
 
 void Generator::Draw() {
+    _foundation->Draw();
     _wall->Draw();
+    _roof->Draw();
 }

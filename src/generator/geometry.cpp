@@ -1,5 +1,9 @@
 #include "geometry.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <ostream>
+#include <stack>
 #include <stdexcept>
 
 #include "renderer/line.hpp"
@@ -38,7 +42,7 @@ void geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, b
 }
 
 void geo::Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point) {
-    return Intersection(a.GetStartFlat(), a.GetDirectionFlat(), b.GetStartFlat(), b.GetDirectionFlat(), parallel,
+    return Intersection(a.GetStartFlat(), a.GetFlatNormal(), b.GetStartFlat(), b.GetFlatNormal(), parallel,
                         point);
 }
 
@@ -128,4 +132,104 @@ std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<S
     }
 
     return std::make_shared<Mesh>(vertices, indices);
+}
+
+std::shared_ptr<Mesh> geo::WallsToMesh(std::vector<Wall> &walls) {
+    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+
+    for (Wall &wall : walls) {
+        mesh = Mesh::Join(mesh, wall.GetMesh());
+    }
+
+    return mesh;
+}
+
+
+std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline) {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+
+    std::vector<glm::vec3> points;
+    for (const auto& point: outline) {
+        points.push_back(point.Start);
+    }
+
+    int offset = 0;
+    while (points.size() >= 3 && offset < points.size()) {
+        auto start = points[offset];
+        auto middle = points[(offset + 1) % points.size()];
+        auto end = points[(offset + 2) % points.size()];
+
+        if (!IsClockwise(start, middle, end)) {
+            offset++;
+            continue;
+        }
+
+        bool invalid = false;
+        for (int i = 0; i < points.size(); i++) {
+            invalid |= IsInsideTriangle(Flatten(start), Flatten(middle), Flatten(end), Flatten(points[i]));
+        }
+        if (invalid) {
+            offset++;
+            continue;
+        }
+
+        points.erase(points.begin() + (offset + 1) % points.size());
+
+        indices.push_back(vertices.size());
+        indices.push_back(vertices.size() + 1);
+        indices.push_back(vertices.size() + 2);
+
+        vertices.push_back({start, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(start.x, start.z)});
+        vertices.push_back({middle, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(middle.x, middle.z)});
+        vertices.push_back({end, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(end.x, end.z)});
+        offset = 0;
+    }
+    return std::make_shared<Mesh>(vertices, indices);
+}
+
+bool geo::Intersects(std::vector<Segment> &segments, glm::vec3 a, glm::vec3 b) {
+    glm::vec2 flatStart = glm::vec2(a.x, a.z);
+    glm::vec2 flatEnd = glm::vec2(b.x, b.z);
+    auto normal = flatEnd - flatStart;
+
+    return std::any_of(segments.begin(), segments.end(), [flatStart, normal] (const Segment& segment) {
+        return Intersects(flatStart, normal, segment.GetStartFlat(), segment.GetFlatNormal());
+    });
+}
+
+bool geo::Intersects(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx) {
+    float cross = adx.x * bdx.y - adx.y * bdx.x;
+
+    if (cross == 0.0f) {
+        return false;
+    }
+
+    glm::vec2 diff = b - a;
+    float t = (diff.x * bdx.y - diff.y * bdx.x) / cross;
+
+    // TODO: add propper epsilon
+    return t > 0.001 && t < 0.999;
+}
+
+bool geo::IsClockwise(glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+    auto ab = b - a;
+    auto ac = c - a;
+    auto normal = glm::cross(ac, ab);
+    return glm::dot(normal, glm::vec3(0,1.0f,0)) < 0;
+}
+
+float geo::Cross(glm::vec2 a, glm::vec2 b) {
+    return a.x * b.y - a.y * b.x;
+}
+
+glm::vec2 geo::Flatten(glm::vec3 a) {
+    return glm::vec2(a.x, a.z);
+}
+
+bool geo::IsInsideTriangle(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 point) {
+    float d1 = Cross(b - a, point - a);
+    float d2 = Cross(c - b, point - b);
+    float d3 = Cross(a - c, point - c);
+    return (d1 < 0 && d2 < 0 && d3 < 0) || (d1 > 0 && d2 > 0 && d3 > 0);
 }

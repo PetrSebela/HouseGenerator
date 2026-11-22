@@ -23,7 +23,7 @@ void main() {
     vec3 bitangent = cross(tangent, frag.normal);
     mat3 TBN = mat3(tangent, bitangent, frag.normal);
     vec3 normal = texture(normalMap, frag.uv).rgb;
-    normal = -normalize(normal * 2.0 - 1.0);
+    normal = normalize(normal * 2.0 - 1.0);
     vec3 mappedNormal = TBN * normal;
 
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 
+#include "roof/roof.hpp"
 #include "renderer/camera.hpp"
 #include "renderer/mesh.hpp"
 #include "renderer/scene_object.hpp"
@@ -13,7 +14,11 @@
  */
 class Generator {
     std::vector<Segment> _footprint; // Base building footprint segments
+    std::shared_ptr<SceneObject> _foundation = std::make_shared<SceneObject>();
     std::shared_ptr<SceneObject> _wall = std::make_shared<SceneObject>();
+    std::shared_ptr<SceneObject> _roof = std::make_shared<SceneObject>();
+
+    std::shared_ptr<Roof> _roofGenerator = std::make_shared<Roof>();
 
 public:
     // Building parameters

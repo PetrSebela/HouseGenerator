@@ -16,37 +16,37 @@ public:
     /**
      * @return Segment length
      */
-    float Length();
+    float Length() const;
 
     /**
      * @return Segment normal on y-plane
      */
-    glm::vec3 Normal();
+    glm::vec3 Normal() const;
 
     /**
      * @return Segment direction vector
      */
-    glm::vec3 Direction();
+    glm::vec3 Direction() const;
 
     /**
      * @return Segment start on y-plane
      */
-    glm::vec2 GetStartFlat();
+    glm::vec2 GetStartFlat() const;
 
     /**
      * @return Segment end on y-plane
      */
-    glm::vec2 GetEndFlat();
+    glm::vec2 GetEndFlat() const;
 
     /**
      * @return Segment direction on y-plane
      */
-    glm::vec2 GetDirectionFlat();
+    glm::vec2 GetFlatNormal() const;
 
     /**
      * Offsets segment along its normal
      * @param amount by which the segment is offseted
      * @return offseted segment
      */
-    Segment Offset(float amount);
+    Segment Offset(float amount) const;
 };
