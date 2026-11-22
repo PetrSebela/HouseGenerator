@@ -6,6 +6,7 @@
 #include "roof/roof.hpp"
 #include "roof/flat_roof.hpp"
 #include "renderer/texture.hpp"
+#include "roof/hipped_roof.hpp"
 
 Generator::Generator() {
     auto plasterAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
@@ -26,7 +27,7 @@ Generator::Generator() {
     // TODO: add propper roof tile material
     _roof->SetShader(wallShader);
 
-    _roofGenerator = std::make_shared<FlatRoof>();
+    _roofGenerator = std::make_shared<HippedRoof>();
 }
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {

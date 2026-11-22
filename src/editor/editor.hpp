@@ -31,10 +31,10 @@ class Editor {
     SDL_Window* _window;    // SDL window pointer
     SDL_GLContext _context; // SDL context pointer
 
-    std::unique_ptr<Camera> _camera;            // Main camera
-    std::unique_ptr<Camera> _shadowCamera;      // Camera used for shadow mapping
-    std::unique_ptr<EventSystem> _eventSystem;  // Event system reference
-    std::unique_ptr<Footprint> _footprint;      // Footprint editor reference
+    std::shared_ptr<Camera> _camera;            // Main camera
+    std::shared_ptr<Camera> _shadowCamera;      // Camera used for shadow mapping
+    std::shared_ptr<EventSystem> _eventSystem;  // Event system reference
+    std::shared_ptr<Footprint> _footprint;      // Footprint editor reference
 
     // Deferred rendering stuff
     GLuint _gBuffer;            // geometry frame buffer
@@ -42,6 +42,7 @@ class Editor {
     GLuint _albedoTexture;      // Color buffer
     GLuint _normalTexture;      // Normal buffer
     GLuint _positionTexture;    // Position buffer (in world space)
+    GLuint _postProcessMask;    // Position buffer (in world space)
 
     // Shadow mapping buffers
     GLuint _shadowMapFBO;       // Shadow mapping frame buffer

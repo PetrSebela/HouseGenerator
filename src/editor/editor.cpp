@@ -13,6 +13,7 @@
 #include "renderer/mesh.hpp"
 #include "scene_object.hpp"
 #include "event_system.hpp"
+#include "gizmos.hpp"
 #include "generator/generator.hpp"
 
 void Editor::RegisterCallbacks() {
@@ -85,8 +86,8 @@ void Editor::DrawUI() {
     ImGui::Checkbox("Snap to grid", &_footprint->SnapToGrid);
     ImGui::SliderFloat("Grid size", &_footprint->GridSize, 0.01, 1.0f);
 
-    const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Depth", "Shadow"};
-    ImGui::Combo("Buffer view", (int*)&_bufferView, items, 6);
+    const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Depth", "Shadow", "PP Target"};
+    ImGui::Combo("Buffer view", (int*)&_bufferView, items, 7);
 
     ImGui::End();
 
@@ -108,8 +109,11 @@ void Editor::SetupBuffers() {
     _positionTexture = Texture::GenTexture(4096, 2160);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _positionTexture, 0);
 
-    GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(3, buffers);
+    _postProcessMask = Texture::GenTexture(4096, 2160);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _postProcessMask, 0);
+
+    GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+    glDrawBuffers(4, buffers);
 
     glGenTextures(1, &_depthBuffer);
     glBindTexture(GL_TEXTURE_2D, _depthBuffer);
@@ -146,10 +150,10 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     _window = window;
     _context = context;
 
-    _camera = std::make_unique<Camera>();
-    _shadowCamera = std::make_unique<Camera>(true);
-    _eventSystem = std::make_unique<EventSystem>();
-    _footprint = std::make_unique<Footprint>(this);
+    _camera = std::make_shared<Camera>();
+    _shadowCamera = std::make_shared<Camera>(true);
+    _eventSystem = std::make_shared<EventSystem>();
+    _footprint = std::make_shared<Footprint>(this);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -220,8 +224,10 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
     glEnable(GL_ALPHA_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
 
     // Render skybox
     glDepthMask(GL_FALSE);
@@ -237,6 +243,8 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     _footprint->Draw();
+
+    Gizmos::GetInstance()->DrawGizmos(_camera);
 }
 
 void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader, Generator generator) {
@@ -277,6 +285,7 @@ void Editor::Run() {
     postProcessShader->SetTexture2D(GL_TEXTURE2, _positionTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE3, _depthBuffer);
     postProcessShader->SetTexture2D(GL_TEXTURE4, _shadowMapTexture);
+    postProcessShader->SetTexture2D(GL_TEXTURE5, _postProcessMask);
     Generator generator;
 
     _running = true;

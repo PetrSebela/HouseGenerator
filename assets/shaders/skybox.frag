@@ -12,11 +12,11 @@ layout(binding=0) uniform samplerCube skybox;
 layout(location=0) out vec4 FragColor;
 layout(location=1) out vec4 FragNormal;
 layout(location=2) out vec4 FragPosition;
+layout(location=3) out vec4 PostProcessMask;
 
 void main() {
     vec3 view = normalize(frag.worldPosition);
     vec4 skyboxSample = texture(skybox, view);
     FragColor = skyboxSample;
-    FragPosition = vec4(0, 1000, 0, 1);
-//    FragPosition = vec4(frag.worldPosition, 1);
+    PostProcessMask = vec4(0, 0, 0, 1);
 }

@@ -26,7 +26,7 @@ public:
     /**
      * @return Segment direction vector
      */
-    glm::vec3 Direction() const;
+    glm::vec3 GetDirection() const;
 
     /**
      * @return Segment start on y-plane

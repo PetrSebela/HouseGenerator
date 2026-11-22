@@ -75,11 +75,6 @@ namespace geo {
 
     /**
      * Checks if two segments intersect
-     * @param a
-     * @param adx
-     * @param b
-     * @param bdx
-     * @return
      */
     bool Intersects(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx);
 
@@ -90,4 +85,6 @@ namespace geo {
     float Cross(glm::vec2 a, glm::vec2 b);
 
     glm::vec2 Flatten(glm::vec3 a);
+
+    int mod(int a, int b);
 }

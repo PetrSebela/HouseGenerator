@@ -29,7 +29,7 @@ float geo::DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 point) {
 void geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point) {
     float cross = adx.x * bdx.y - adx.y * bdx.x;
 
-    if (cross == 0.0f) {
+    if (std::abs(cross) <= 1e-6f * glm::length(adx) * glm::length(bdx)) {
         parallel = true;
         return;
     }
@@ -42,8 +42,12 @@ void geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, b
 }
 
 void geo::Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point) {
-    return Intersection(a.GetStartFlat(), a.GetFlatNormal(), b.GetStartFlat(), b.GetFlatNormal(), parallel,
-                        point);
+    return Intersection(a.GetStartFlat(),
+                    a.GetFlatNormal(),
+                    b.GetStartFlat(),
+                    b.GetFlatNormal(),
+                    parallel,
+                    point);
 }
 
 std::vector<Segment> geo::Raise(std::vector<Segment> &segments, float amount) {
@@ -99,7 +103,7 @@ std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<S
         auto left = a[i];
         auto right = b[i];
 
-        glm::vec3 normal = glm::cross(left.Direction(), glm::normalize(left.Start - right.Start));
+        glm::vec3 normal = glm::cross(left.GetDirection(), glm::normalize(left.Start - right.Start));
 
         vertices.push_back({
             .position = left.Start,
@@ -225,6 +229,13 @@ float geo::Cross(glm::vec2 a, glm::vec2 b) {
 
 glm::vec2 geo::Flatten(glm::vec3 a) {
     return glm::vec2(a.x, a.z);
+}
+
+int geo::mod(int a, int b) {
+    int remainder = a % b;
+    if (remainder < 0)
+        remainder += b < 0 ? -b : b;
+    return remainder;
 }
 
 bool geo::IsInsideTriangle(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 point) {

@@ -11,6 +11,7 @@ in struct VertexOut{
 layout(location=0) out vec4 FragColor;
 layout(location=1) out vec4 FragNormal;
 layout(location=2) out vec4 FragPosition;
+layout(location=3) out vec4 PostProcessMask;
 
 // Rewrite of https://bgolus.medium.com/the-best-darn-grid-shader-yet-727f9278b9d8
 float grid(vec2 uv, vec2 targetWidth)
@@ -49,4 +50,5 @@ void main() {
     FragColor = vec4(grid, alpha);
     FragNormal = vec4(9,12,15, 1);
     FragPosition = vec4(frag.worldPosition, 1);
+    PostProcessMask = vec4(1);
 }

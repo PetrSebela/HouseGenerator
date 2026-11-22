@@ -7,6 +7,7 @@ layout(binding=1) uniform sampler2D normalMap;
 layout(binding=2) uniform sampler2D positionMap;
 layout(binding=3) uniform sampler2D depthMap;
 layout(binding=4) uniform sampler2D shadowMap;
+layout(binding=5) uniform sampler2D postProcessMask;
 
 
 uniform int bufferView = 0;
@@ -38,16 +39,15 @@ void main() {
     vec3 position = texture(positionMap, UV).xyz;
     vec3 normal = texture(normalMap, UV).xyz;
     float depth = ToLinearDepth(texture(depthMap, UV).r);
-
+    
     normal = normalize(normal);
     vec3 normalDebug = normal * 0.5 + 0.5;
     vec3 sunDirection = normalize(vec3(9,12,15));
 
     float intensity = inShadow(position) * max(dot(sunDirection, normal), 0);
 
-    // Hacky skybox detection
-    // TODO: remove
-    if(position.y > 500)
+    // Disable post processing
+    if(texture(postProcessMask, UV).r == 0)
         intensity = 1;
 
     vec3 shaded = albedo * mix(0.25, 1, intensity);
@@ -64,4 +64,6 @@ void main() {
         FragColor = vec4(depth / 500, depth / 500, depth / 500, 1);
     else if(bufferView == 5)
         FragColor = texture(shadowMap, UV);
+    else if(bufferView == 6)
+        FragColor = texture(postProcessMask, UV);
 }

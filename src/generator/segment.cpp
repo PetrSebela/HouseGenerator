@@ -10,7 +10,7 @@ glm::vec3 Segment::Normal() const {
     return glm::cross(glm::vec3(0.0f,1.0f,0.0f), glm::normalize(End - Start));
 }
 
-glm::vec3 Segment::Direction() const{
+glm::vec3 Segment::GetDirection() const{
     return glm::normalize(End - Start);
 }
 
