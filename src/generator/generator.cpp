@@ -6,6 +6,7 @@
 #include "roof/roof.hpp"
 #include "roof/flat_roof.hpp"
 #include "renderer/texture.hpp"
+#include "roof/gabled_roof.hpp"
 #include "roof/hipped_roof.hpp"
 
 Generator::Generator() {
@@ -26,8 +27,7 @@ Generator::Generator() {
 
     // TODO: add propper roof tile material
     _roof->SetShader(wallShader);
-
-    _roofGenerator = std::make_shared<HippedRoof>();
+    _roofGenerator = std::make_shared<GabledRoof>();
 }
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {

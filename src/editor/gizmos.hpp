@@ -58,4 +58,23 @@ public:
      * Requests drawing of vector gizmo in this frame
      */
     void DrawVector(glm::vec3 start, glm::vec3 magnitude, glm::vec3 color = glm::vec3(1.0,0.0,1.0));
+
+    /**
+     * Draws vector of segments
+     */
+    void DrawSegments(std::vector<Segment> segments, glm::vec3 color = glm::vec3(1.0,0.0,1.0));
+
+    static glm::vec3 Color(int hash);
+
+    static glm::vec3 Color(std::string hash);
+
+    inline static glm::vec3 RED = glm::vec3(1,0,0);
+    inline static glm::vec3 GREEN = glm::vec3(0,1,0);
+    inline static glm::vec3 BLUE = glm::vec3(0,0,1);
+    inline static glm::vec3 YELLOW = glm::vec3(1,1,0);
+    inline static glm::vec3 CYAN = glm::vec3(0,1,1);
+    inline static glm::vec3 MAGENTA = glm::vec3(1,0,1);
+    inline static glm::vec3 BLACK = glm::vec3(0,0,0);
+    inline static glm::vec3 GRAY = glm::vec3(0.25,0.25,0.25);
+
 };

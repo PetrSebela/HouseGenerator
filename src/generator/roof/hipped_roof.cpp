@@ -5,19 +5,23 @@
 
 #include "geometry.hpp"
 #include "gizmos.hpp"
+#include "utils.hpp"
 
 HippedRoof::HippedRoof() {
 
 }
 
 std::shared_ptr<Mesh> HippedRoof::GetMesh() {
+    // https://en.wikipedia.org/wiki/Straight_skeleton
+    // https://github.com/prochitecture/bpypolyskel
+
     std::vector<Segment> edges;
     std::vector<Segment> ridge;
 
     auto gizmos= Gizmos::GetInstance();
     for (int i = 0; i < _perimeter.size(); i++) {
         auto left = _perimeter[i % _perimeter.size()].GetDirection();
-        auto right = -_perimeter[geo::mod(i - 1, _perimeter.size())].GetDirection();
+        auto right = -_perimeter[Utils::Mod(i - 1, _perimeter.size())].GetDirection();
         auto normal = glm::normalize((left + right) / 2.0f);
         edges.emplace_back(_perimeter[i].Start, _perimeter[i].Start + normal);
     }

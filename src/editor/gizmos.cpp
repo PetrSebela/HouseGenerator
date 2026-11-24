@@ -1,5 +1,6 @@
 #include "gizmos.hpp"
 #include <glad/gl.h>
+#include <random>
 
 #include "camera.hpp"
 
@@ -58,4 +59,22 @@ void Gizmos::DrawLine(glm::vec3 start, glm::vec3 end, glm::vec3 color) {
 
 void Gizmos::DrawVector(glm::vec3 start, glm::vec3 magnitude, glm::vec3 color) {
     DrawLine(start, start +  magnitude, color);
+}
+
+void Gizmos::DrawSegments(std::vector<Segment> segments, glm::vec3 color) {
+    for (auto segment : segments) {
+        DrawLine(segment, color);
+    }
+}
+
+glm::vec3 Gizmos::Color(int hash) {
+    float hue = glm::fract(hash * 0.618034f);
+    float r = glm::abs(hue * 6.0f - 3.0f) - 1.0f;
+    float g = 2.0f - glm::abs(hue * 6.0f - 2.0f);
+    float b = 2.0f - glm::abs(hue * 6.0f - 4.0f);
+    return glm::clamp(glm::vec3(r, g, b), 0.0f, 1.0f);
+}
+
+glm::vec3 Gizmos::Color(std::string hash) {
+    return Color(std::hash<std::string>{}(hash) % 50);
 }

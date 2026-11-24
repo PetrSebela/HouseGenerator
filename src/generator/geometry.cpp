@@ -26,22 +26,24 @@ float geo::DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 point) {
     return glm::distance(closest, point);
 }
 
-void geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point) {
+glm::vec2 geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point) {
     float cross = adx.x * bdx.y - adx.y * bdx.x;
 
-    if (std::abs(cross) <= 1e-6f * glm::length(adx) * glm::length(bdx)) {
+    if (std::abs(cross) <= 1e-4f * glm::length(adx) * glm::length(bdx)) {
         parallel = true;
-        return;
+        return glm::vec2(std::numeric_limits<float>::quiet_NaN());
     }
 
     glm::vec2 diff = b - a;
     float t = (diff.x * bdx.y - diff.y * bdx.x) / cross;
+    float u = (diff.x * adx.y - diff.y * adx.x) / cross;
 
     point = a + adx * t;
     parallel = false;
+    return {t,u};
 }
 
-void geo::Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point) {
+glm::vec2 geo::Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point) {
     return Intersection(a.GetStartFlat(),
                     a.GetFlatNormal(),
                     b.GetStartFlat(),
@@ -78,12 +80,19 @@ std::vector<Segment> geo::ConnectNeighbours(std::vector<Segment> &segments, bool
         bool parallel;
 
         glm::vec2 start = current.GetStartFlat();
-        if (i != 0 || loop)
+        if (i != 0 || loop) {
             Intersection(current, before, parallel, start);
+            if (parallel)
+                start = current.GetStartFlat();
+        }
+
 
         glm::vec2 end = current.GetEndFlat();
-        if (i != segments.size() - 1 || loop)
+        if (i != segments.size() - 1 || loop) {
             Intersection(current, after, parallel, end);
+            if (parallel)
+                end = current.GetEndFlat();
+        }
 
         Segment connectedSegment(glm::vec3(start.x, current.Start.y, start.y), glm::vec3(end.x, current.End.y, end.y));
         connected.push_back(connectedSegment);
@@ -231,11 +240,47 @@ glm::vec2 geo::Flatten(glm::vec3 a) {
     return glm::vec2(a.x, a.z);
 }
 
-int geo::mod(int a, int b) {
-    int remainder = a % b;
-    if (remainder < 0)
-        remainder += b < 0 ? -b : b;
-    return remainder;
+float geo::Distance(glm::vec3 a, Plane plane) {
+    return glm::dot(a - plane.point, glm::normalize(plane.normal));
+}
+
+glm::vec3 geo::Intersects(glm::vec3 point, glm::vec3 direction, Plane plane) {
+    const float denom = glm::dot(plane.normal, direction);
+
+    if (glm::abs(denom) < 1e-8f)
+        return glm::vec3(std::numeric_limits<float>::quiet_NaN());
+
+    const float t = glm::dot(plane.point - point, plane.normal) / denom;
+
+    if (t < 0.0f)
+        return glm::vec3(std::numeric_limits<float>::quiet_NaN());
+
+    return point + t * direction;
+}
+
+std::vector<float> geo::GetIntersections(glm::vec3 point, glm::vec3 direction, std::vector<Segment>& segments) {
+    auto flatPoint = Flatten(point);
+    auto flatDirection = Flatten(direction);
+    std::vector<float> intersections;
+
+    for (const auto& segment : segments) {
+        bool parallel;
+        glm::vec2 point;
+        auto distances = Intersection(flatPoint, flatDirection, Flatten(segment.Start), Flatten(segment.GetDirection()), parallel, point);
+
+        if (parallel || distances.y < 0 || distances.y > segment.Length()) {
+            continue;
+        }
+
+        intersections.push_back(distances.x);
+    }
+
+    std::sort(intersections.begin(), intersections.end());
+    return intersections;
+}
+
+float geo::Angle(glm::vec3 a, glm::vec3 b) {
+    return glm::acos(glm::dot(glm::normalize(a), glm::normalize(b))) * 180.0f / glm::pi<float>();
 }
 
 bool geo::IsInsideTriangle(glm::vec2 a, glm::vec2 b, glm::vec2 c, glm::vec2 point) {

@@ -1,11 +1,14 @@
 #include "extruder.hpp"
 
+#include <iostream>
+#include <ostream>
+
 #include "geometry.hpp"
 
 Extruder::Extruder(std::vector<Segment>& active) {
     _active = active;
     _frame.push_back(active);
-    _loop = active.front().Start == active.back().End;
+    _loop = length(geo::Flatten(active.front().Start) - geo::Flatten(active.back().End)) < 1e-6;
 }
 
 void Extruder::MoveHead(glm::vec2 offset) {

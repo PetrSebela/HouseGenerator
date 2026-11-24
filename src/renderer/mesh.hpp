@@ -23,9 +23,13 @@ public:
     void Draw();
     void Free();
     void Clear();
+    void Join(std::shared_ptr<Mesh> joined, glm::vec3 position);
 
+    static std::shared_ptr<Mesh> Stamp(std::shared_ptr<Mesh>& stamp, std::vector<glm::vec3>& position);
     static std::shared_ptr<Mesh> Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b);
     static std::shared_ptr<Mesh> Cube();
     static std::shared_ptr<Mesh> Plane(float size);
     static std::shared_ptr<Mesh> Quad();
+    static std::shared_ptr<Mesh> Load(std::string path);
+    static std::shared_ptr<Mesh> Transform(std::shared_ptr<Mesh> mesh, glm::mat4 transform);
 };

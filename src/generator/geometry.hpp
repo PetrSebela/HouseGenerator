@@ -8,7 +8,13 @@
 // TODO: make this module more explicit around in what space are the operation performed (2D, 3D)
 
 // Collection of function for manipulating geometry (basically blender operations)
+struct Plane {
+    glm::vec3 point;
+    glm::vec3 normal;
+};
+
 namespace geo {
+
     /**
      * @return Closes point on line (a - b) from point
      */
@@ -22,12 +28,12 @@ namespace geo {
     /**
      * Point at which two line intersect
      */
-    void Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point);
+    glm::vec2 Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point);
 
     /**
     * Point at which two line intersect
     */
-    void Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point);
+    glm::vec2 Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point);
 
     /**
      * Moves segments on y axis by amount
@@ -86,5 +92,14 @@ namespace geo {
 
     glm::vec2 Flatten(glm::vec3 a);
 
-    int mod(int a, int b);
+    float Distance(glm::vec3 a, Plane plane);
+
+    glm::vec3 Intersects(glm::vec3 point, glm::vec3 direction, Plane plane);
+
+    std::vector<float> GetIntersections(glm::vec3 point, glm::vec3 direction, std::vector<Segment>& segments);
+
+    /**
+     * Returns angle between two vectors in degrees
+     */
+    float Angle(glm::vec3 a, glm::vec3 b);
 }

@@ -21,7 +21,9 @@ Footprint::Footprint(Editor* editor) {
 
     _handles = {
         Handle(glm::vec3(5,0,3)),
-        Handle(glm::vec3(5,0,-3)),
+        Handle(glm::vec3(5,0,0)),
+        Handle(glm::vec3(7,0,0)),
+        Handle(glm::vec3(7,0,-3)),
         Handle(glm::vec3(-5,0,-3)),
         Handle(glm::vec3(-5,0,3)),
     };

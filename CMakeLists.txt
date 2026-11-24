@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 4.2.3)
 project(HouseGenerator)
 set(CMAKE_CXX_STANDARD 17)
+SET(CMAKE_CXX_FLAGS  "-O3")
 
 # OpenGL
 find_package(OpenGL)

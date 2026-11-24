@@ -47,7 +47,7 @@ class Editor {
     // Shadow mapping buffers
     GLuint _shadowMapFBO;       // Shadow mapping frame buffer
     GLuint _shadowMapTexture;   // Shadow map depth texture
-    static constexpr int SHADOW_MAP_RESOLUTION = 4096;  // Shadow map resolution
+    static constexpr int SHADOW_MAP_RESOLUTION = 16000;  // Shadow map resolution
 
     // Editor flags and other data
     int _windowWidth;           // Window width

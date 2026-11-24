@@ -1,7 +1,10 @@
 #include "mesh.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <ostream>
+
+#include "utils.hpp"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices) : Mesh() {
     SetData(vertices, indices);
@@ -59,6 +62,45 @@ void Mesh::Clear() {
     _vertices.clear();
     _indices.clear();
     SetData(_vertices, _indices);
+}
+
+void Mesh::Join(std::shared_ptr<Mesh> joined, glm::vec3 position) {
+    _vertices.reserve(_vertices.size() + joined->_vertices.size());
+    for (const auto& vertex: joined->_vertices) {
+        auto v = vertex;
+        v.position += position;
+        _vertices.push_back(v);
+    }
+
+    _indices.reserve(_indices.size() + joined->_indices.size());
+
+    int offset = _vertices.size();
+    for (auto index: joined->_indices) {
+        _indices.push_back(offset + index);
+    }
+
+    SetData(_vertices, _indices);
+}
+
+std::shared_ptr<Mesh> Mesh::Stamp(std::shared_ptr<Mesh> &stamp, std::vector<glm::vec3> &position) {
+    std::vector<Vertex> vertices(stamp->_vertices.size() * position.size());
+    std::vector<GLuint> indices(stamp->_indices.size() * position.size());
+
+    for (int offsetIndex = 0; offsetIndex < position.size(); offsetIndex++) {
+        const auto offset = position[offsetIndex];
+        for (int vertexIndex = 0; vertexIndex < stamp->_vertices.size(); vertexIndex++) {
+            auto vertex = stamp->_vertices[vertexIndex];
+            vertex.position += offset;
+            vertices[offsetIndex * stamp->_vertices.size() + vertexIndex] = vertex;
+        }
+
+        for (int i = 0; i < stamp->_indices.size(); i++) {
+            auto index = stamp->_indices[i] + offsetIndex * stamp->_vertices.size();
+            indices[offsetIndex * stamp->_indices.size() + i] = index;
+        }
+    }
+
+    return std::make_shared<Mesh>(vertices, indices);
 }
 
 std::shared_ptr<Mesh> Mesh::Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b) {
@@ -154,4 +196,75 @@ std::shared_ptr<Mesh> Mesh::Quad() {
     };
 
     return std::make_shared<Mesh>(vertices, indices);
+}
+
+std::shared_ptr<Mesh> Mesh::Load(std::string path) {
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> uvs;
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+
+    std::ifstream file(path);
+    std::string line;
+    while (std::getline(file, line)) {
+        auto columns = Utils::Split(line, " ");
+        auto type = columns[0];
+        if (type == "v") {
+            float x = std::stof(columns[1]);
+            float y = std::stof(columns[2]);
+            float z = std::stof(columns[3]);
+            positions.push_back(glm::vec3(x,y,z));
+        }
+        else if (type == "vn") {
+            float x = std::stof(columns[1]);
+            float y = std::stof(columns[2]);
+            float z = std::stof(columns[3]);
+            normals.push_back(glm::vec3(x,y,z));
+        }
+        else if (type == "vt") {
+            float u = std::stof(columns[1]);
+            float v = std::stof(columns[2]);
+            uvs.push_back(glm::vec2(u,v));
+        }
+        else if (type == "f") {
+            int base = vertices.size();
+            for (int i = 1; i < columns.size(); i++) {
+                auto vertexData = columns[i];
+                auto indices = Utils::Split(vertexData, "/");
+                auto position = std::stoi(indices[0]) - 1;
+                auto uv = std::stoi(indices[1]) - 1;
+                auto normal = std::stoi(indices[2]) - 1;
+
+                Vertex vertex{
+                    .position = positions[position],
+                    .normal = normals[normal],
+                    .UV = uvs[uv]
+                };
+                vertices.push_back(vertex);
+            }
+
+            for (int i = 1; i < columns.size() - 2; i++) {
+                indices.push_back(base);
+                indices.push_back(base + i);
+                indices.push_back(base + i + 1);
+            }
+        }
+    }
+    std::cout << "Vert" << vertices.size() << std::endl;
+    std::cout << "Ind" << indices.size() << std::endl;
+
+
+    return std::make_shared<Mesh>(vertices, indices);
+}
+
+std::shared_ptr<Mesh> Mesh::Transform(std::shared_ptr<Mesh> mesh, glm::mat4 transform) {
+    std::vector vertices(mesh->_vertices);
+
+    for (auto& vertex : vertices) {
+        vertex.position = xyz((transform * glm::vec4(vertex.position,1)));
+    }
+
+    return std::make_shared<Mesh>(vertices, mesh->_indices);
+
 }
