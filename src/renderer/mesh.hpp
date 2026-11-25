@@ -13,7 +13,7 @@ class Mesh {
     std::vector<GLuint> _indices;
 
 public:
-    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices);
+    Mesh(const std::vector<Vertex>& vertices,const std::vector<GLuint>& indices);
     Mesh();
     ~Mesh();
     Mesh(const Mesh&) = delete;
@@ -21,11 +21,10 @@ public:
 
     void SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices);
     void Draw();
-    void Free();
     void Clear();
-    void Join(std::shared_ptr<Mesh> joined, glm::vec3 position);
+    void Join(std::shared_ptr<Mesh> joined);
 
-    static std::shared_ptr<Mesh> Stamp(std::shared_ptr<Mesh>& stamp, std::vector<glm::vec3>& position);
+    static std::shared_ptr<Mesh> Stamp(std::shared_ptr<Mesh>& stamp, std::vector<glm::vec3>& positions);
     static std::shared_ptr<Mesh> Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b);
     static std::shared_ptr<Mesh> Cube();
     static std::shared_ptr<Mesh> Plane(float size);

@@ -8,6 +8,7 @@
 #include "renderer/shader.hpp"
 #include "glm/glm.hpp"
 #include "segment.hpp"
+#include "roof/gabled_roof.hpp"
 
 /**
  * The house generator himself
@@ -18,9 +19,10 @@ class Generator {
     std::shared_ptr<SceneObject> _wall = std::make_shared<SceneObject>();
     std::shared_ptr<SceneObject> _roof = std::make_shared<SceneObject>();
 
-    std::shared_ptr<Roof> _roofGenerator = std::make_shared<Roof>();
 
 public:
+    std::shared_ptr<Roof> RoofGenerator = std::make_shared<Roof>();
+
     // Building parameters
     float Levels = 1;           // Number of stories
     float LevelHeight = 2.4f;   // Story height in meters

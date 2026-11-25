@@ -6,7 +6,7 @@
 
 #include "utils.hpp"
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices) : Mesh() {
+Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<GLuint>& indices) : Mesh() {
     SetData(vertices, indices);
 }
 
@@ -17,11 +17,16 @@ Mesh::Mesh() {
 }
 
 Mesh::~Mesh() {
-    Free();
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 }
 
 void Mesh::SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices) {
-    // TODO: add validity checks
+    if (vertices.empty() || indices.empty()) {
+        return;
+    }
+
     _vertices = vertices;
     _indices = indices;
 
@@ -51,12 +56,6 @@ void Mesh::Draw() {
     glBindVertexArray(0);
 }
 
-void Mesh::Free() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-}
-
 void Mesh::Clear() {
     // Lets give the data jump rope and let it jump all over the memory :3
     _vertices.clear();
@@ -64,43 +63,43 @@ void Mesh::Clear() {
     SetData(_vertices, _indices);
 }
 
-void Mesh::Join(std::shared_ptr<Mesh> joined, glm::vec3 position) {
-    _vertices.reserve(_vertices.size() + joined->_vertices.size());
-    for (const auto& vertex: joined->_vertices) {
-        auto v = vertex;
-        v.position += position;
-        _vertices.push_back(v);
-    }
-
-    _indices.reserve(_indices.size() + joined->_indices.size());
-
+void Mesh::Join(std::shared_ptr<Mesh> joined) {
     int offset = _vertices.size();
+    _indices.reserve(_indices.size() + joined->_indices.size());
     for (auto index: joined->_indices) {
         _indices.push_back(offset + index);
     }
 
+    _vertices.reserve(_vertices.size() + joined->_vertices.size());
+    _vertices.insert(_vertices.end(), joined->_vertices.begin(), joined->_vertices.end());
     SetData(_vertices, _indices);
 }
 
-std::shared_ptr<Mesh> Mesh::Stamp(std::shared_ptr<Mesh> &stamp, std::vector<glm::vec3> &position) {
-    std::vector<Vertex> vertices(stamp->_vertices.size() * position.size());
-    std::vector<GLuint> indices(stamp->_indices.size() * position.size());
+std::shared_ptr<Mesh> Mesh::Stamp(std::shared_ptr<Mesh> &stamp, std::vector<glm::vec3> &positions) {
+    const auto& stampVertices = stamp->_vertices;
+    const auto& stampIndices  = stamp->_indices;
+    const GLuint vertexCount  = stampVertices.size();
 
-    for (int offsetIndex = 0; offsetIndex < position.size(); offsetIndex++) {
-        const auto offset = position[offsetIndex];
-        for (int vertexIndex = 0; vertexIndex < stamp->_vertices.size(); vertexIndex++) {
-            auto vertex = stamp->_vertices[vertexIndex];
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> indices;
+    vertices.reserve(stampVertices.size() * positions.size());
+    indices.reserve(stampIndices.size() * positions.size());
+
+    for (size_t copy = 0; copy < positions.size(); copy++) {
+        const glm::vec3 offset = positions[copy];
+        const GLuint indexOffset = copy * vertexCount;
+
+        for (Vertex vertex : stampVertices) {
             vertex.position += offset;
-            vertices[offsetIndex * stamp->_vertices.size() + vertexIndex] = vertex;
+            vertices.push_back(vertex);
         }
 
-        for (int i = 0; i < stamp->_indices.size(); i++) {
-            auto index = stamp->_indices[i] + offsetIndex * stamp->_vertices.size();
-            indices[offsetIndex * stamp->_indices.size() + i] = index;
+        for (GLuint index : stampIndices) {
+            indices.push_back(index + indexOffset);
         }
     }
 
-    return std::make_shared<Mesh>(vertices, indices);
+    return std::make_shared<Mesh>(std::move(vertices), std::move(indices));
 }
 
 std::shared_ptr<Mesh> Mesh::Join(std::shared_ptr<Mesh> a, std::shared_ptr<Mesh> b) {

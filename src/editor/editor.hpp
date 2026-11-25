@@ -20,6 +20,7 @@ enum BufferView {
     Position,
     Depth,
     ShadowMap,
+    PostProcessMask,
 };
 
 /**
@@ -35,6 +36,7 @@ class Editor {
     std::shared_ptr<Camera> _shadowCamera;      // Camera used for shadow mapping
     std::shared_ptr<EventSystem> _eventSystem;  // Event system reference
     std::shared_ptr<Footprint> _footprint;      // Footprint editor reference
+    std::shared_ptr<Generator> _generator;      // House generator himself
 
     // Deferred rendering stuff
     GLuint _gBuffer;            // geometry frame buffer
@@ -57,11 +59,16 @@ class Editor {
     bool _wireframe = false;    // Show wireframe of generated model
     double _lastFrameTime;      // Time at start of last frame
 
+    // Generator settings flags
+    bool _mirrorRoof = true;
+
     glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, -10.0f, 15.0f);
     glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);
 
     BufferView _bufferView = Composite;
     RenderPass _renderPass = RenderPass::Light;
+
+    std::vector<float> _frametimes;
 
     inline static std::shared_ptr<Editor> _instance;
 
@@ -109,10 +116,9 @@ public:
 
     void RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader> postProcessShader);
 
-    void RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid,
-                     Generator generator);
+    void RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid);
 
-    void RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader, Generator generator);
+    void RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader);
 
     /**
      * Runs the editor

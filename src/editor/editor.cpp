@@ -15,6 +15,8 @@
 #include "event_system.hpp"
 #include "gizmos.hpp"
 #include "generator/generator.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "roof/gabled_roof.hpp"
 
 void Editor::RegisterCallbacks() {
     _eventSystem->RegisterEvent(SDL_EVENT_QUIT, [this](auto &&) { _running = false; return false; });
@@ -70,6 +72,8 @@ void Editor::DrawUI() {
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
+    // ImGui::ShowDemoWindow();
+
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     ImGui::Begin("Performance", &_running, flags);
 
@@ -79,8 +83,15 @@ void Editor::DrawUI() {
     ImGui::SetWindowSize({width * 0.25f, height - 20.0f});
 
     auto deltaMilis = (SDL_GetTicksNS() - _lastFrameTime) / 1000000.0f;
+    _frametimes.push_back(deltaMilis);
+    if (_frametimes.size() > 100)
+        _frametimes.erase(_frametimes.begin());
+
     _lastFrameTime = SDL_GetTicksNS();
     ImGui::Text("Frametime: %lf ms", deltaMilis);
+
+    ImGui::PlotLines("Frametimes", _frametimes.data(), _frametimes.size());
+
     ImGui::Checkbox("Use wireframe", &_wireframe);
     ImGui::Checkbox("Relax selected", &_footprint->Relax);
     ImGui::Checkbox("Snap to grid", &_footprint->SnapToGrid);
@@ -89,9 +100,36 @@ void Editor::DrawUI() {
     const char* items[] = {"Composite", "Albedo", "Position", "Normal", "Depth", "Shadow", "PP Target"};
     ImGui::Combo("Buffer view", (int*)&_bufferView, items, 7);
 
+
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Spacing();
+    ImGui::Text("Roof settings");
+    if (auto generator = std::dynamic_pointer_cast<GabledRoof>(_generator->RoofGenerator)) {
+        ImGui::DragFloat3("Split point", glm::value_ptr(generator->SplitPoint), 0.05, -100, 100);
+        ImGui::DragFloat("Ridge azimuth", &generator->RidgeAzimuth, 0.05, 0, 360);
+
+        ImGui::Checkbox("Mirror roof sides", &_mirrorRoof);
+
+        if (_mirrorRoof) {
+            ImGui::SliderFloat("Angle", &generator->LeftDescriptor.angle, -45, 45);
+            ImGui::SliderFloat("Minimum ridge height", &generator->LeftDescriptor.minRidgeHeight, 0, 10);
+            generator->RightDescriptor = generator->LeftDescriptor;
+        }
+        else {
+            ImGui::SliderFloat("Left angle", &generator->LeftDescriptor.angle, -45, 45);
+            ImGui::SliderFloat("Left minimum ridge height", &generator->LeftDescriptor.minRidgeHeight, 0, 10);
+
+            ImGui::SliderFloat("Right angle", &generator->RightDescriptor.angle, -45, 45);
+            ImGui::SliderFloat("Right minimum ridge height", &generator->RightDescriptor.minRidgeHeight, 0, 10);
+        }
+    }
+
     ImGui::End();
 
-    // ImGui::ShowDemoWindow();
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -155,6 +193,7 @@ Editor::Editor(SDL_Window *window, SDL_GLContext context) {
     _eventSystem = std::make_shared<EventSystem>();
     _footprint = std::make_shared<Footprint>(this);
 
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui_ImplSDL3_InitForOpenGL(_window, _context);
@@ -217,7 +256,7 @@ void Editor::RenderScreeQuad(std::shared_ptr<Mesh> quad, std::shared_ptr<Shader>
     glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
-void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid, Generator generator) {
+void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> skyboxShader, SceneObject grid) {
     _renderPass = Geometry;
     glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
     glViewport(0, 0, 4096, 2160);
@@ -237,7 +276,7 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
     grid.Draw();
 
     glPolygonMode(GL_FRONT_AND_BACK, _wireframe ? GL_LINE : GL_FILL);
-    generator.Draw();
+    _generator->Draw();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     _footprint->Draw();
@@ -245,7 +284,7 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
     Gizmos::GetInstance()->DrawGizmos(_camera);
 }
 
-void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader, Generator generator) {
+void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader) {
     _renderPass = Light;
     glBindFramebuffer(GL_FRAMEBUFFER, _shadowMapFBO);
     glViewport(0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION);
@@ -254,7 +293,7 @@ void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShade
     lightShader->Bind();
     lightShader->SetMatrix4x4("model", glm::identity<glm::mat4>());
     if (!_wireframe)
-        generator.Draw();
+        _generator->Draw();
     grid.Draw();
 }
 
@@ -284,12 +323,12 @@ void Editor::Run() {
     postProcessShader->SetTexture2D(GL_TEXTURE3, _depthBuffer);
     postProcessShader->SetTexture2D(GL_TEXTURE4, _shadowMapTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE5, _postProcessMask);
-    Generator generator;
+    _generator = std::make_shared<Generator>();
 
     _running = true;
     while (_running) {
         _eventSystem->ProcessEvents();
-        generator.SetFootprint(_footprint->GetOutline());
+        _generator->SetFootprint(_footprint->GetOutline());
 
         auto pos = PolarToWorld(_cameraOrbitPosition) + _cameraCenter;
         _camera->SetPosition(pos);
@@ -298,15 +337,15 @@ void Editor::Run() {
         Shader::SetGlobalMatrix4x4("light", _shadowCamera->GetMatrix());
         Shader::SetGlobalMatrix4x4("view", _camera->GetMatrix());
 
-        RenderLightmap(grid, lightShader, generator);
-        RenderScene(skybox, skyboxShader, grid, generator);
+        RenderLightmap(grid, lightShader);
+        RenderScene(skybox, skyboxShader, grid);
         RenderScreeQuad(quad, postProcessShader);
 
         DrawUI();
         SDL_GL_SwapWindow(_window);
 
         // Limit framerate so my poor GPU does not explode
-        SDL_Delay(10);
+        // SDL_Delay(10);
     }
 
     SDL_GL_DestroyContext(_context);

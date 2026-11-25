@@ -8,7 +8,8 @@
 Extruder::Extruder(std::vector<Segment>& active) {
     _active = active;
     _frame.push_back(active);
-    _loop = length(geo::Flatten(active.front().Start) - geo::Flatten(active.back().End)) < 1e-6;
+    _loop = length(geo::Flatten(active.front().Start) - geo::Flatten(active.back().End)) < 1e-3;
+    // _loop = true;
 }
 
 void Extruder::MoveHead(glm::vec2 offset) {

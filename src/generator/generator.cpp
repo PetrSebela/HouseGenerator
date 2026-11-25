@@ -1,5 +1,7 @@
 #include "generator.hpp"
 
+#include <iostream>
+
 #include "extruder.hpp"
 #include "renderer/camera.hpp"
 #include "geometry.hpp"
@@ -27,7 +29,7 @@ Generator::Generator() {
 
     // TODO: add propper roof tile material
     _roof->SetShader(wallShader);
-    _roofGenerator = std::make_shared<GabledRoof>();
+    RoofGenerator = std::make_shared<GabledRoof>();
 }
 
 void Generator::SetFootprint(std::vector<glm::vec3> footprint) {
@@ -57,8 +59,8 @@ void Generator::RefreshModel() {
     _wall->SetMesh(wallSet.GetMesh());
 
     auto roofPerimeter = wall.GetExtruderHead();
-    _roofGenerator->SetPerimeter(roofPerimeter);
-    _roof->SetMesh(_roofGenerator->GetMesh());
+    RoofGenerator->SetPerimeter(roofPerimeter);
+    _roof->SetMesh(RoofGenerator->GetMesh());
 }
 
 void Generator::Draw() {
