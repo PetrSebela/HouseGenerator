@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -13,11 +14,16 @@
  */
 class Shader {
     GLuint _program = 0;    // Program ID
+    std::string _name;
+    std::string _vsPath;
+    std::string _fsPath;
     std::unordered_map<GLuint, GLuint> _textures;
 
     inline static GLuint bound;    // ID of program which is currently bound
+    inline static std::map<std::string, std::shared_ptr<Shader>> _loaded;
     inline static std::vector<std::shared_ptr<Shader>> _instances;
-    Shader(std::string vsPath, std::string fsPath);
+
+    Shader(std::string vsPath, std::string fsPath, std::string name="");
     Shader() = default;
 
 public:
@@ -37,11 +43,13 @@ public:
      * Loads and compiles shader program
      * @param vsPath path to vertex shader
      * @param fsPath path to fragment shader
+     * @param name
      * @return Shared pointer to shader object
      */
+    static std::shared_ptr<Shader> LoadShader(std::string vsPath, std::string fsPath, std::string name);
+
     static std::shared_ptr<Shader> LoadShader(std::string vsPath, std::string fsPath);
 
-    void Discard();
     void Bind();
     void SetMatrix4x4(const char* name, glm::mat4 matrix);
     void SetMatrix4x4Current(const char* name, glm::mat4 matrix);
@@ -54,5 +62,11 @@ public:
      * @warning The matrix is set ONLY to instances that were made BEFORE call to this function
      */
     static void SetGlobalMatrix4x4(const char* name, glm::mat4 matrix);
+
+    static std::shared_ptr<Shader> GetShaderByName(std::string name);
+
+    static void SetupShaders();
+
+    static void ListLoadedShaders();
 };
 

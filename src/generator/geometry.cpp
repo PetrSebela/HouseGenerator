@@ -28,8 +28,9 @@ float geo::DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 point) {
 
 glm::vec2 geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 bdx, bool &parallel, glm::vec2 &point) {
     float cross = adx.x * bdx.y - adx.y * bdx.x;
+    point = glm::vec2(0);
 
-    if (std::abs(cross) <= 1e-4f * glm::length(adx) * glm::length(bdx)) {
+    if (std::abs(cross) <= 1e-3f * glm::length(adx) * glm::length(bdx)) {
         parallel = true;
         return glm::vec2(std::numeric_limits<float>::quiet_NaN());
     }
@@ -45,9 +46,9 @@ glm::vec2 geo::Intersection(glm::vec2 a, glm::vec2 adx, glm::vec2 b, glm::vec2 b
 
 glm::vec2 geo::Intersection(Segment a, Segment b, bool &parallel, glm::vec2 &point) {
     return Intersection(a.GetStartFlat(),
-                    a.GetFlatNormal(),
+                    a.GetFlatDirection(),
                     b.GetStartFlat(),
-                    b.GetFlatNormal(),
+                    b.GetFlatDirection(),
                     parallel,
                     point);
 }
@@ -85,7 +86,6 @@ std::vector<Segment> geo::ConnectNeighbours(std::vector<Segment> &segments, bool
             if (parallel)
                 start = current.GetStartFlat();
         }
-
 
         glm::vec2 end = current.GetEndFlat();
         if (i != segments.size() - 1 || loop) {
@@ -145,6 +145,14 @@ std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<S
     }
 
     return std::make_shared<Mesh>(vertices, indices);
+}
+
+bool geo::GetSegmentSide(const Segment& segment, const  Segment& bisector) {
+    auto relativeStart = geo::Flatten(segment.Start - bisector.Start);
+    auto relativeEnd = geo::Flatten(segment.End - bisector.End);
+    auto startCross = geo::Cross(relativeStart, geo::Flatten(bisector.GetDirection()));
+    auto endCross = geo::Cross(relativeEnd, geo::Flatten(bisector.GetDirection()));
+    return startCross + endCross > 0;
 }
 
 std::shared_ptr<Mesh> geo::WallsToMesh(std::vector<Wall> &walls) {
@@ -207,7 +215,7 @@ bool geo::Intersects(std::vector<Segment> &segments, glm::vec3 a, glm::vec3 b) {
     auto normal = flatEnd - flatStart;
 
     return std::any_of(segments.begin(), segments.end(), [flatStart, normal] (const Segment& segment) {
-        return Intersects(flatStart, normal, segment.GetStartFlat(), segment.GetFlatNormal());
+        return Intersects(flatStart, normal, segment.GetStartFlat(), segment.GetFlatDirection());
     });
 }
 
@@ -266,7 +274,7 @@ std::vector<float> geo::GetIntersections(glm::vec3 point, glm::vec3 direction, s
     for (const auto& segment : segments) {
         bool parallel;
         glm::vec2 point;
-        auto distances = Intersection(flatPoint, flatDirection, Flatten(segment.Start), Flatten(segment.GetDirection()), parallel, point);
+        auto distances = Intersection(flatPoint, flatDirection, segment.GetStartFlat(), segment.GetFlatDirection(), parallel, point);
 
         if (parallel || distances.y < 0 || distances.y > segment.Length()) {
             continue;

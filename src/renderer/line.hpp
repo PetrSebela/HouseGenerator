@@ -10,7 +10,7 @@
  */
 class Line {
     std::shared_ptr<Mesh> _mesh = std::make_shared<Mesh>(); // Line mesh
-    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert","assets/shaders/color.frag"); // Line shader
+    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/default.vert","assets/shaders/color.frag", "color"); // Line shader
     bool _isLoop = false;   // If line should form a loop
 public:
     Line() = default;
@@ -32,4 +32,4 @@ public:
      * Set line points
      */
     void SetPoints(std::vector<glm::vec3> points);
-};
+};  

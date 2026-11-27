@@ -19,7 +19,7 @@ public:
     Mesh(const Mesh&) = delete;
     Mesh& operator=(const Mesh&) = delete;
 
-    void SetData(std::vector<Vertex> vertices, std::vector<GLuint> indices);
+    void SetData(const std::vector<Vertex> &vertices, const std::vector<GLuint> &indices);
     void Draw();
     void Clear();
     void Join(std::shared_ptr<Mesh> joined);

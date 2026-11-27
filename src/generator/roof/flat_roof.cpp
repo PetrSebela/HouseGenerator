@@ -7,6 +7,8 @@ FlatRoof::FlatRoof() {
 
 FlatRoof::FlatRoof(std::vector<Segment> perimeter) : Roof(perimeter) {}
 
-std::shared_ptr<Mesh> FlatRoof::GetMesh() {
-    return geo::Fill(_perimeter);
+std::vector<SceneObject> FlatRoof::GetRoof() {
+    return{
+        SceneObject(geo::Fill(_perimeter), Shader::GetShaderByName("wall"))
+    };
 }

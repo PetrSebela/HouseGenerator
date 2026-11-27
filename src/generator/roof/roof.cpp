@@ -1,6 +1,7 @@
 #include "roof.hpp"
 
 #include "geometry.hpp"
+#include "scene_object.hpp"
 
 Roof::Roof() {
 }
@@ -13,6 +14,6 @@ void Roof::SetPerimeter(std::vector<Segment> perimeter) {
     _perimeter = perimeter;
 }
 
-std::shared_ptr<Mesh> Roof::GetMesh() {
-    return std::make_shared<Mesh>();
+std::vector<SceneObject> Roof::GetRoof() {
+    return {};
 }

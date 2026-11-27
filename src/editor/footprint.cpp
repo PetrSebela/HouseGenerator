@@ -7,10 +7,17 @@
 #include "generator/geometry.hpp"
 
 void Footprint::UpdateLine() {
+    _isModified = true;
     _points.clear();
     for (auto& handle : _handles)
         _points.push_back(handle.GetPosition());
     _outline.SetPoints(_points);
+}
+
+bool Footprint::WasModified() {
+    auto wasModifier = _isModified;
+    _isModified = false;
+    return wasModifier;
 }
 
 Footprint::Footprint(Editor* editor) {
@@ -19,14 +26,24 @@ Footprint::Footprint(Editor* editor) {
     _outline = Line();
     _outline.SetLoop(true);
 
-    _handles = {
-        Handle(glm::vec3(5,0,3)),
-        Handle(glm::vec3(5,0,0)),
-        Handle(glm::vec3(7,0,0)),
-        Handle(glm::vec3(7,0,-3)),
-        Handle(glm::vec3(-5,0,-3)),
-        Handle(glm::vec3(-5,0,3)),
-    };
+    _handles = BOX_SHAPE;
+    UpdateLine();
+
+    editor->RegisterEvent(SDL_EVENT_KEY_DOWN, [this](const SDL_Event *event) {
+        switch (event->key.key) {
+            case SDLK_1:
+                _handles = L_SHAPE;
+                break;
+
+            case SDLK_2:
+                _handles = BOX_SHAPE;
+                break;
+            default:
+                break;
+        }
+        UpdateLine();
+        return false;
+    });
 
     // This callback is just pure mess, split it into more manageable chunks
     editor->RegisterEvent(SDL_EVENT_MOUSE_BUTTON_DOWN, [this, editor](const SDL_Event *event) {
@@ -108,8 +125,6 @@ Footprint::Footprint(Editor* editor) {
 
         return false;
     });
-
-    UpdateLine();
 }
 
 void Footprint::Draw() {

@@ -12,23 +12,15 @@
 #include "roof/hipped_roof.hpp"
 
 Generator::Generator() {
-    auto plasterAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
-    auto plasterNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
-    auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    wallShader->SetTexture2D(GL_TEXTURE1, plasterAlbedo);
-    wallShader->SetTexture2D(GL_TEXTURE2, plasterNormal);
+
+    auto wallShader = Shader::GetShaderByName("wall");
     _wall->SetShader(wallShader);
 
-    auto concreteAlbedo = Texture::LoadTexture("assets/textures/concrete/albedo.jpg");
-    auto concreteNormal = Texture::LoadTexture("assets/textures/concrete/normal.jpg");
-    auto foundationShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag");
-    foundationShader->SetTexture2D(GL_TEXTURE1, concreteAlbedo);
-    foundationShader->SetTexture2D(GL_TEXTURE2, concreteNormal);
+    auto foundationShader = Shader::GetShaderByName("foundation");
 
     _foundation->SetShader(foundationShader);
 
     // TODO: add propper roof tile material
-    _roof->SetShader(wallShader);
     RoofGenerator = std::make_shared<GabledRoof>();
 }
 
@@ -39,8 +31,6 @@ void Generator::SetFootprint(std::vector<glm::vec3> footprint) {
         Segment segment(footprint[i], footprint[(i + 1) % footprint.size()]);
         _footprint.push_back(segment);
     }
-
-    RefreshModel();
 }
 
 void Generator::RefreshModel() {
@@ -60,11 +50,13 @@ void Generator::RefreshModel() {
 
     auto roofPerimeter = wall.GetExtruderHead();
     RoofGenerator->SetPerimeter(roofPerimeter);
-    _roof->SetMesh(RoofGenerator->GetMesh());
+    _roof = RoofGenerator->GetRoof();
 }
 
 void Generator::Draw() {
     _foundation->Draw();
     _wall->Draw();
-    _roof->Draw();
+
+    for (auto& part: _roof)
+        part.Draw();
 }

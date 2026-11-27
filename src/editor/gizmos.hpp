@@ -21,7 +21,7 @@ struct Point {
  * Class responsible for drawing gizmos
  */
 class Gizmos {
-    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/gizmo.vert","assets/shaders/gizmo.frag");  // Shader which is used for drawing gizmos
+    std::shared_ptr<Shader> _shader = Shader::LoadShader("assets/shaders/gizmo.vert","assets/shaders/gizmo.frag", "gizmos");  // Shader which is used for drawing gizmos
     std::vector<Point> _points;     // Collection of points to be drawn
     std::vector<Point> _lines;      // Collection of line points to be drawn
 

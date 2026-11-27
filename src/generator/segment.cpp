@@ -22,7 +22,7 @@ glm::vec2 Segment::GetEndFlat() const {
     return {End.x, End.z};
 }
 
-glm::vec2 Segment::GetFlatNormal() const {
+glm::vec2 Segment::GetFlatDirection() const {
     return glm::normalize(GetEndFlat() - GetStartFlat());
 }
 

@@ -11,6 +11,7 @@ public:
     glm::vec3 End;      // Segment end
 
     Segment(glm::vec3 start, glm::vec3 end) : Start(start), End(end) {};
+    Segment(){};
     ~Segment() = default;
 
     /**
@@ -41,7 +42,7 @@ public:
     /**
      * @return Segment direction on y-plane
      */
-    glm::vec2 GetFlatNormal() const;
+    glm::vec2 GetFlatDirection() const;
 
     /**
      * Offsets segment along its normal

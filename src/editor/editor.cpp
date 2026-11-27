@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <iostream>
+#include <numeric>
 
 #include "../../external/imgui/backends/imgui_impl_sdl3.h"
 #include "../../external/imgui/backends/imgui_impl_opengl3.h"
@@ -30,6 +31,17 @@ void Editor::RegisterCallbacks() {
     _eventSystem->RegisterEvent(SDL_EVENT_KEY_DOWN, [this](const SDL_Event *event) {
         if (event->key.key == SDLK_W)
             _wireframe = !_wireframe;
+
+        if (event->key.key == SDLK_G)
+            _showGizmos = !_showGizmos;
+
+        if (event->key.key == SDLK_U)
+            _forceUpdates = !_forceUpdates;
+
+        if (event->key.key == SDLK_H) {
+            _showHighQualityModel = !_showHighQualityModel;
+            _settingsChanged = true;
+        }
         return false;
     });
 
@@ -65,7 +77,7 @@ void Editor::RegisterCallbacks() {
         _camera->SetAspectRatio((float) _windowWidth / (float) _windowHeight);
         return false;
     });
-}
+    }
 
 void Editor::DrawUI() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -88,7 +100,9 @@ void Editor::DrawUI() {
         _frametimes.erase(_frametimes.begin());
 
     _lastFrameTime = SDL_GetTicksNS();
-    ImGui::Text("Frametime: %lf ms", deltaMilis);
+
+    auto avg = std::accumulate(_frametimes.begin(), _frametimes.end(), 0.0f) / _frametimes.size();
+    ImGui::Text("Frametime (last 100 avg): %lf ms", avg);
 
     ImGui::PlotLines("Frametimes", _frametimes.data(), _frametimes.size());
 
@@ -106,30 +120,39 @@ void Editor::DrawUI() {
     ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Spacing();
+
     ImGui::Text("Roof settings");
+    _settingsChanged = false;
+    _settingsChanged |= ImGui::Checkbox("Show high quality", &_showHighQualityModel);
+
+
     if (auto generator = std::dynamic_pointer_cast<GabledRoof>(_generator->RoofGenerator)) {
-        ImGui::DragFloat3("Split point", glm::value_ptr(generator->SplitPoint), 0.05, -100, 100);
-        ImGui::DragFloat("Ridge azimuth", &generator->RidgeAzimuth, 0.05, 0, 360);
+        generator->HighQuality = _showHighQualityModel;
+        _settingsChanged |= ImGui::DragFloat3("Split point", glm::value_ptr(generator->SplitPoint), 0.05, -100, 100);
+        _settingsChanged |= ImGui::DragFloat("Ridge azimuth", &generator->RidgeAzimuth, 0.05, 0, 360);
 
-        ImGui::Checkbox("Mirror roof sides", &_mirrorRoof);
-
-        if (_mirrorRoof) {
-            ImGui::SliderFloat("Angle", &generator->LeftDescriptor.angle, -45, 45);
-            ImGui::SliderFloat("Minimum ridge height", &generator->LeftDescriptor.minRidgeHeight, 0, 10);
-            generator->RightDescriptor = generator->LeftDescriptor;
+        _settingsChanged |= ImGui::Checkbox("Match left-right ridge line", &generator->MatchLeftRightRidge);
+        if (generator->MatchLeftRightRidge) {
+            _settingsChanged |= ImGui::SliderFloat("Min roof ridge height", &generator->LeftDescriptor.minRidgeHeight, 0.01, 25);
+            generator->RightDescriptor.minRidgeHeight = generator->LeftDescriptor.minRidgeHeight;
         }
         else {
-            ImGui::SliderFloat("Left angle", &generator->LeftDescriptor.angle, -45, 45);
-            ImGui::SliderFloat("Left minimum ridge height", &generator->LeftDescriptor.minRidgeHeight, 0, 10);
+            _settingsChanged |= ImGui::SliderFloat("Min left roof ridge height", &generator->LeftDescriptor.minRidgeHeight, 0.01, 25);
+            _settingsChanged |= ImGui::SliderFloat("Min right roof ridge height", &generator->RightDescriptor.minRidgeHeight, 0.01, 25);
+        }
 
-            ImGui::SliderFloat("Right angle", &generator->RightDescriptor.angle, -45, 45);
-            ImGui::SliderFloat("Right minimum ridge height", &generator->RightDescriptor.minRidgeHeight, 0, 10);
+        _settingsChanged |= ImGui::Checkbox("Match left-right roof angle", &_matchLeftRightRoofAngle);
+        if (_matchLeftRightRoofAngle) {
+            _settingsChanged |= ImGui::SliderFloat("Roof angle", &generator->LeftDescriptor.angle, -45, 45);
+            generator->RightDescriptor.angle = generator->LeftDescriptor.angle;
+        }
+        else {
+            _settingsChanged |= ImGui::SliderFloat("Left roof angle", &generator->LeftDescriptor.angle, -45, 45);
+            _settingsChanged |= ImGui::SliderFloat("Right roof angle", &generator->RightDescriptor.angle, -45, 45);
         }
     }
 
     ImGui::End();
-
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -281,7 +304,8 @@ void Editor::RenderScene(std::shared_ptr<Mesh> skybox, std::shared_ptr<Shader> s
 
     _footprint->Draw();
 
-    Gizmos::GetInstance()->DrawGizmos(_camera);
+    if (_showGizmos)
+        Gizmos::GetInstance()->DrawGizmos(_camera);
 }
 
 void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShader) {
@@ -298,16 +322,14 @@ void Editor::RenderLightmap(SceneObject grid, std::shared_ptr<Shader> lightShade
 }
 
 void Editor::Run() {
-    auto skyboxTexture = Texture::LoadSkybox("assets/textures/skybox");
 
     // Skybox setup
     auto skybox = Mesh::Cube();
-    auto skyboxShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/skybox.frag");
-    skyboxShader->SetTexture2D(GL_TEXTURE0, skyboxTexture);
+    auto skyboxShader = Shader::GetShaderByName("skybox");
 
     // Grid setup
     auto floor = Mesh::Plane(150.0f);
-    auto floorShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/floor.frag");
+    auto floorShader = Shader::GetShaderByName("floor");
     auto grid = SceneObject(floor, floorShader);
     _shadowCamera->SetPosition(glm::vec3(9,12,15));
     _shadowCamera->LookAt(glm::vec3(0,0,0));
@@ -315,8 +337,8 @@ void Editor::Run() {
     SDL_GetWindowSize(_window, &_windowWidth, &_windowHeight);
 
     auto quad = Mesh::Quad();
-    auto lightShader = Shader::LoadShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag");
-    auto postProcessShader = Shader::LoadShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag");
+    auto lightShader = Shader::LoadShader("assets/shaders/shadow.vert", "assets/shaders/empty.frag", "light");
+    auto postProcessShader = Shader::LoadShader("assets/shaders/post_process.vert", "assets/shaders/post_process.frag", "postprocess");
     postProcessShader->SetTexture2D(GL_TEXTURE0, _albedoTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE1, _normalTexture);
     postProcessShader->SetTexture2D(GL_TEXTURE2, _positionTexture);
@@ -328,7 +350,11 @@ void Editor::Run() {
     _running = true;
     while (_running) {
         _eventSystem->ProcessEvents();
-        _generator->SetFootprint(_footprint->GetOutline());
+
+        if (_settingsChanged || _footprint->WasModified() || _forceUpdates) {
+            _generator->SetFootprint(_footprint->GetOutline());
+            _generator->RefreshModel();
+        }
 
         auto pos = PolarToWorld(_cameraOrbitPosition) + _cameraCenter;
         _camera->SetPosition(pos);

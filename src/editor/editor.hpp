@@ -58,9 +58,14 @@ class Editor {
     bool _cameraPan = false;    // If camera is panning (lmb down)
     bool _wireframe = false;    // Show wireframe of generated model
     double _lastFrameTime;      // Time at start of last frame
+    bool _showGizmos = true;    // If gizmos should be drawn or not
+    bool _forceUpdates = true;  // Updates building every frame (just to show gizmos)
+    bool _showHighQualityModel = false;
 
     // Generator settings flags
-    bool _mirrorRoof = true;
+    bool _matchLeftRightRoofAngle = true;
+
+    bool _settingsChanged = false;
 
     glm::vec3 _cameraOrbitPosition = glm::vec3(0.0f, -10.0f, 15.0f);
     glm::vec3 _cameraCenter = glm::vec3(0.0f, 0.5f, 0.0f);

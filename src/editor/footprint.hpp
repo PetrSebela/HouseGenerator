@@ -17,6 +17,24 @@ class Footprint {
     Editor* _editor;                // Reference to editor (for getting cursor position)
     bool _draggingOutline = false;  // Flag representing if user drags outline
     int _selectedPointIndex = 0;    // Which point the user is dragging
+    bool _isModified = true;
+
+    // Following shapes cannot be static, as they create their own opengl object which is not initialized at that point
+    std::vector<Handle> L_SHAPE = {
+        Handle(glm::vec3(5,0,3)),
+        Handle(glm::vec3(5,0,0)),
+        Handle(glm::vec3(7,0,0)),
+        Handle(glm::vec3(7,0,-3)),
+        Handle(glm::vec3(-5,0,-3)),
+        Handle(glm::vec3(-5,0,3)),
+    };
+
+    std::vector<Handle> BOX_SHAPE = {
+        Handle(glm::vec3(5,0,5)),
+        Handle(glm::vec3(5,0,-5)),
+        Handle(glm::vec3(-5,0,-5)),
+        Handle(glm::vec3(-5,0,5)),
+    };
 
     /**
      * Update line visualization
@@ -28,6 +46,12 @@ public:
     bool Relax = false;         // If dragged handle should be placed on line between adjacent points
     bool SnapToGrid = false;    // If dragged handle should be snapped to grid
     float GridSize = 0.5f;      // Snap grid size
+
+    /**
+     * Check is footprint was modified since last check
+     * @warning Reading resets value back to false until another modification event
+     */
+    bool WasModified();
 
     Footprint() = default;
     Footprint(Editor* editor);

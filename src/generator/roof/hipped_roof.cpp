@@ -11,7 +11,7 @@ HippedRoof::HippedRoof() {
 
 }
 
-std::shared_ptr<Mesh> HippedRoof::GetMesh() {
+std::vector<SceneObject> HippedRoof::GetRoof() {
     // https://en.wikipedia.org/wiki/Straight_skeleton
     // https://github.com/prochitecture/bpypolyskel
 
@@ -25,7 +25,6 @@ std::shared_ptr<Mesh> HippedRoof::GetMesh() {
         auto normal = glm::normalize((left + right) / 2.0f);
         edges.emplace_back(_perimeter[i].Start, _perimeter[i].Start + normal);
     }
-
 
 
     for (int i = 0; i < edges.size(); i++) {
@@ -43,5 +42,5 @@ std::shared_ptr<Mesh> HippedRoof::GetMesh() {
         gizmos->DrawLine(edges[(i + 1) % edges.size()].Start, point);
     }
 
-    return std::make_shared<Mesh>();
+    return {};
 }

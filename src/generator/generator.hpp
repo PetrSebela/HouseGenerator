@@ -17,9 +17,9 @@ class Generator {
     std::vector<Segment> _footprint; // Base building footprint segments
     std::shared_ptr<SceneObject> _foundation = std::make_shared<SceneObject>();
     std::shared_ptr<SceneObject> _wall = std::make_shared<SceneObject>();
-    std::shared_ptr<SceneObject> _roof = std::make_shared<SceneObject>();
+    // std::shared_ptr<SceneObject> _roof = std::make_shared<SceneObject>();
 
-
+    std::vector<SceneObject> _roof;
 public:
     std::shared_ptr<Roof> RoofGenerator = std::make_shared<Roof>();
 

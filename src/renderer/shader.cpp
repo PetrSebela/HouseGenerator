@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "texture.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 GLuint Shader::LoadShaderFromFile(std::string path, GLuint type) {
@@ -41,13 +42,24 @@ GLuint Shader::LoadShaderFromFile(std::string path, GLuint type) {
     return shader;
 }
 
+std::shared_ptr<Shader> Shader::LoadShader(std::string vsPath, std::string fsPath, std::string name) {
+    auto shader = std::shared_ptr<Shader>(new Shader(vsPath, fsPath, name));
+    _loaded[name] = shader;
+    _instances.push_back(shader);
+    return shader;
+}
+
 std::shared_ptr<Shader> Shader::LoadShader(std::string vsPath, std::string fsPath) {
     auto shader = std::shared_ptr<Shader>(new Shader(vsPath, fsPath));
     _instances.push_back(shader);
     return shader;
 }
 
-Shader::Shader(std::string vsPath, std::string fsPath) : Shader(){
+Shader::Shader(std::string vsPath, std::string fsPath, std::string name) : Shader(){
+    _name = name;
+    _vsPath = vsPath;
+    _fsPath = fsPath;
+
     GLuint vertexShader = LoadShaderFromFile(vsPath, GL_VERTEX_SHADER);
     GLuint fragmentShader = LoadShaderFromFile(fsPath, GL_FRAGMENT_SHADER);
 
@@ -67,15 +79,6 @@ Shader::Shader(std::string vsPath, std::string fsPath) : Shader(){
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
-
-    std::cout << "Loaded shader:" << fsPath << " | "<< _instances.size() << std::endl;
-}
-
-
-void Shader::Discard() {
-    // _instances.erase(std::remove_if(_instances.begin(), _instances.end(), [this](Shader& shader) {
-    //     return shader._program == _program;
-    // }), _instances.end());
 }
 
 void Shader::Bind() {
@@ -121,7 +124,60 @@ void Shader::SetInt(const char *name, int value) {
 }
 
 void Shader::SetGlobalMatrix4x4(const char *name, glm::mat4 matrix) {
-    for (auto shader : _instances) {
+    for (const auto& shader: _instances) {
         shader->SetMatrix4x4(name, matrix);
+    }
+}
+
+std::shared_ptr<Shader> Shader::GetShaderByName(std::string name) {
+    auto shader = _loaded.find(name);
+    if (shader == _loaded.end()) {
+        // TODO: default checkerboard shader
+        return nullptr;
+    }
+    return shader->second;
+}
+
+void Shader::SetupShaders() {
+    auto skyboxTexture = Texture::LoadSkybox("assets/textures/skybox");
+    auto skyboxShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/skybox.frag", "skybox");
+    skyboxShader->SetTexture2D(GL_TEXTURE0, skyboxTexture);
+
+    LoadShader("assets/shaders/default.vert", "assets/shaders/floor.frag", "floor");
+
+    auto plasterAlbedo = Texture::LoadTexture("assets/textures/plaster/albedo.jpg");
+    auto plasterNormal = Texture::LoadTexture("assets/textures/plaster/normal.jpg");
+    auto wallShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag", "wall");
+    wallShader->SetTexture2D(GL_TEXTURE1, plasterAlbedo);
+    wallShader->SetTexture2D(GL_TEXTURE2, plasterNormal);
+
+    auto concreteAlbedo = Texture::LoadTexture("assets/textures/concrete/albedo.jpg");
+    auto concreteNormal = Texture::LoadTexture("assets/textures/concrete/normal.jpg");
+    auto foundationShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag", "foundation");
+    foundationShader->SetTexture2D(GL_TEXTURE1, concreteAlbedo);
+    foundationShader->SetTexture2D(GL_TEXTURE2, concreteNormal);
+
+
+    auto basaltAlbedo = Texture::LoadTexture("assets/textures/basalt/albedo.jpg");
+    auto basaltNormal = Texture::LoadTexture("assets/textures/basalt/normal.jpg");
+    auto basaltShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag", "basalt");
+    basaltShader->SetTexture2D(GL_TEXTURE1, basaltAlbedo);
+    basaltShader->SetTexture2D(GL_TEXTURE2, basaltNormal);
+
+
+    auto tilesAlbedo = Texture::LoadTexture("assets/textures/tiles/albedo.jpg");
+    auto tilesNormal = Texture::LoadTexture("assets/textures/tiles/normal.jpg");
+    auto tilesShader = Shader::LoadShader("assets/shaders/default.vert", "assets/shaders/wall.frag", "tiles");
+    tilesShader->SetTexture2D(GL_TEXTURE1, tilesAlbedo);
+    tilesShader->SetTexture2D(GL_TEXTURE2, tilesNormal);
+}
+
+void Shader::ListLoadedShaders() {
+    std::cout << "Total shader count: " << _loaded.size() << std::endl;
+    std::cout << "Name | VS | FS" << std::endl;
+    for (const auto& [name, shader] : _loaded) {
+        std::cout << name << " | ";
+        std::cout << shader->_vsPath << " | ";
+        std::cout << shader->_fsPath << std::endl;
     }
 }

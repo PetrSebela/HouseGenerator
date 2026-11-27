@@ -13,6 +13,8 @@ int main() {
     SDL_GL_SetSwapInterval(0);
     gladLoadGL(SDL_GL_GetProcAddress);
 
+    Shader::SetupShaders();
+    Shader::ListLoadedShaders();
     auto editor = Editor::InitSingleton(window, context);
     editor->Run();
     return 0;

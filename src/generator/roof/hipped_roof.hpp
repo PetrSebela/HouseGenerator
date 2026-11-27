@@ -7,5 +7,5 @@ class HippedRoof : public Roof {
 
 public:
     HippedRoof();
-    std::shared_ptr<Mesh> GetMesh() override;
+    std::vector<SceneObject> GetRoof() override;
 };

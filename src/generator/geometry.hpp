@@ -24,7 +24,6 @@ namespace geo {
      * @return Distance to closes point on line (a - b) from point
      */
     float DistanceToLine(glm::vec3 a, glm::vec3 b, glm::vec3 point);
-
     /**
      * Point at which two line intersect
      */
@@ -57,6 +56,11 @@ namespace geo {
      * Creates mesh that bridges two segment paths
      */
     std::shared_ptr<Mesh> BridgeSegments(std::vector<Segment>& a, std::vector<Segment>& b);
+
+    /**
+     * @return True if more area of provided segment is on the right side of the split line
+     */
+    bool GetSegmentSide(const Segment &segment, const Segment &bisector);
 
     /**
      * Converts set of walls into mesh

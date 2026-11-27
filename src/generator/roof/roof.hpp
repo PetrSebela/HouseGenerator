@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "mesh.hpp"
+#include "scene_object.hpp"
 #include "segment.hpp"
 
 class Roof {
@@ -19,5 +20,5 @@ public:
     /**
      * Based on https://alienryderflex.com/triangulation/
      */
-    virtual std::shared_ptr<Mesh> GetMesh();
+    virtual std::vector<SceneObject> GetRoof();
 };
