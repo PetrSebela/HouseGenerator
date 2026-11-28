@@ -6,6 +6,7 @@
 #include <stack>
 #include <stdexcept>
 
+#include "gizmos.hpp"
 #include "renderer/line.hpp"
 #include "roof/gabled_roof.hpp"
 
@@ -118,21 +119,25 @@ std::shared_ptr<Mesh> geo::BridgeSegments(std::vector<Segment> &a, std::vector<S
         vertices.push_back({
             .position = left.Start,
             .normal = normal,
+            .tangent = left.GetDirection(),
             .UV = glm::vec2(0, 0)
         });
         vertices.push_back({
             .position = left.End,
             .normal = normal,
+            .tangent = left.GetDirection(),
             .UV = glm::vec2(left.Length(), 0)
         });
         vertices.push_back({
             .position = right.Start,
             .normal = normal,
+            .tangent = left.GetDirection(),
             .UV = glm::vec2(0, glm::distance(left.Start, right.Start))
         });
         vertices.push_back({
             .position = right.End,
             .normal = normal,
+            .tangent = left.GetDirection(),
             .UV = glm::vec2(right.Length(), glm::distance(left.End, right.End))
         });
 
@@ -168,6 +173,22 @@ std::shared_ptr<Mesh> geo::WallsToMesh(std::vector<Wall> &walls) {
 
 
 std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline, float hintAngle) {
+    if (outline.size() <= 2)
+        return std::make_shared<Mesh>();
+
+    glm::vec3 normal = glm::cross(outline[0].GetDirection(), outline[1].GetDirection());
+
+    if (normal.y < 0)
+        normal = -normal;
+
+    glm::vec3 tangentBase = glm::cross(normal, glm::vec3(0,0,1));
+    glm::vec3 tangent = glm::rotate(glm::identity<glm::mat4>(), glm::radians(hintAngle), normal) * glm::vec4(tangentBase, 1);
+
+    auto gizmos = Gizmos::GetInstance();
+    gizmos->DrawVector(outline[0].Start, normal, Gizmos::RED);
+    gizmos->DrawVector(outline[0].Start, tangent, Gizmos::BLUE);
+
+
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
@@ -175,7 +196,6 @@ std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline, float hintAngle) {
     for (const auto& point: outline) {
         points.push_back(point.Start);
     }
-
 
     glm::mat2 rotation(glm::cos(glm::radians(hintAngle)), glm::sin(glm::radians(hintAngle)),   // column 0
            -glm::sin(glm::radians(hintAngle)), glm::cos(glm::radians(hintAngle)));
@@ -206,9 +226,9 @@ std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline, float hintAngle) {
         indices.push_back(vertices.size() + 1);
         indices.push_back(vertices.size() + 2);
 
-        vertices.push_back({start, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(start.x, start.z)});
-        vertices.push_back({middle, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(middle.x, middle.z)});
-        vertices.push_back({end, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(end.x, end.z)});
+        vertices.push_back({start, glm::vec3(0), normal, tangent,rotation * glm::vec2(start.x, start.z)});
+        vertices.push_back({middle, glm::vec3(0), normal, tangent, rotation * glm::vec2(middle.x, middle.z)});
+        vertices.push_back({end, glm::vec3(0), normal, tangent, rotation * glm::vec2(end.x, end.z)});
         offset = 0;
     }
     return std::make_shared<Mesh>(vertices, indices);

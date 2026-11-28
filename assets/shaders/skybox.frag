@@ -4,6 +4,7 @@ in struct VertexOut{
     vec2 uv;
     vec3 worldPosition;
     vec3 normal;
+    vec3 tangent;
     vec3 lightSpacePosition;
 } frag;
 

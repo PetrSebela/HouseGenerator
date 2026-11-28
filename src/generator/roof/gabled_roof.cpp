@@ -197,13 +197,13 @@ std::vector<SceneObject> GabledRoof::GetRoof() {
     }
     else {
         for (const auto& region :  leftRegions) {
-            roof.emplace_back(geo::Fill(region, RidgeAzimuth), Shader::GetShaderByName("tiles"));
+            roof.emplace_back(geo::Fill(region, RidgeAzimuth - 90), Shader::GetShaderByName("tiles"));
         }
 
         for (const auto& region : rightRegions) {
-            roof.emplace_back(geo::Fill(region, RidgeAzimuth - 180), Shader::GetShaderByName("basalt"));
+            roof.emplace_back(geo::Fill(region, RidgeAzimuth - 180 - 90), Shader::GetShaderByName("tiles"));
         }
     }
-
+    // return{};
     return roof;
 }

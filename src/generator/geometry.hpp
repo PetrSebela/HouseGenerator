@@ -79,7 +79,7 @@ namespace geo {
      * Triangulates polygon defined by vector of segments
      * Based on https://alienryderflex.com/triangulation
      * @param outline polygon outlines defined by vector of neighbouring segments
-     * @param hintAngle
+     * @param hintAngle angle between tangent vector and vec(0,0,1) around the Y axis
      * @return pointer to mesh object
      */
     std::shared_ptr<Mesh> Fill(std::vector<Segment> outline, float hintAngle=0);

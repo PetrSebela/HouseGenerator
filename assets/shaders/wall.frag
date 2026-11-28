@@ -9,6 +9,7 @@ in struct VertexOut{
     vec2 uv;
     vec3 worldPosition;
     vec3 normal;
+    vec3 tangent;
     vec3 lightSpacePosition;
 } frag;
 
@@ -18,15 +19,11 @@ layout(location=2) out vec4 FragPosition;
 layout(location=3) out vec4 PostProcessMask;
 
 void main() {
-
-//    THIS IS TEMPORARY, CONSTRUCT PROPPER TBN MATRIX WHEN REFACTORING!!!!!
-    vec3 tangent = vec3(0,1,0);
-    vec3 bitangent = cross(tangent, frag.normal);
-    mat3 TBN = mat3(tangent, bitangent, frag.normal);
+    vec3 bitangent = cross(frag.tangent, frag.normal);
+    mat3 TBN = mat3(frag.tangent, bitangent, frag.normal);
     vec3 normal = texture(normalMap, frag.uv).rgb;
     normal = normalize(normal * 2.0 - 1.0);
     vec3 mappedNormal = TBN * normal;
-
 
     FragColor = pow(texture(albedoMap, frag.uv),vec4(1.6));
     FragNormal = vec4(mappedNormal, 1);

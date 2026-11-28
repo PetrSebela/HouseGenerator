@@ -1,7 +1,7 @@
 #version 460
 
 layout (location=0) in vec2 inPos;
-layout (location=3) in vec2 inUV;
+layout (location=4) in vec2 inUV;
 out vec2 UV;
 
 void main() {
