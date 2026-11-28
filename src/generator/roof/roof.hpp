@@ -15,7 +15,7 @@ public:
     Roof();
     Roof(std::vector<Segment> perimeter);
 
-    void SetPerimeter(std::vector<Segment> perimeter);
+    virtual void SetPerimeter(std::vector<Segment> perimeter);
 
     /**
      * Based on https://alienryderflex.com/triangulation/

@@ -13,6 +13,12 @@ struct Plane {
     glm::vec3 normal;
 };
 
+struct BisectResult {
+    std::vector<Segment> left;
+    std::vector<Segment> right;
+    std::vector<Segment> combined;
+};
+
 namespace geo {
 
     /**
@@ -73,9 +79,10 @@ namespace geo {
      * Triangulates polygon defined by vector of segments
      * Based on https://alienryderflex.com/triangulation
      * @param outline polygon outlines defined by vector of neighbouring segments
+     * @param hintAngle
      * @return pointer to mesh object
      */
-    std::shared_ptr<Mesh> Fill(std::vector<Segment> outline);
+    std::shared_ptr<Mesh> Fill(std::vector<Segment> outline, float hintAngle=0);
 
     /**
      * Check if polygon intersects on Y plane
@@ -101,6 +108,10 @@ namespace geo {
     glm::vec3 Intersects(glm::vec3 point, glm::vec3 direction, Plane plane);
 
     std::vector<float> GetIntersections(glm::vec3 point, glm::vec3 direction, std::vector<Segment>& segments);
+
+    BisectResult BisectPolygon(const std::vector<Segment> &segments, Segment& bisector);
+
+    std::vector<std::vector<Segment>> JoinIntoRegions(const std::vector<Segment> &segments, Segment bisector);
 
     /**
      * Returns angle between two vectors in degrees

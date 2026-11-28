@@ -7,6 +7,7 @@
 #include <stdexcept>
 
 #include "renderer/line.hpp"
+#include "roof/gabled_roof.hpp"
 
 glm::vec3 geo::ClosestPointOnLine(glm::vec3 a, glm::vec3 b, glm::vec3 point) {
     auto segmentLength = distance(a, b);
@@ -166,7 +167,7 @@ std::shared_ptr<Mesh> geo::WallsToMesh(std::vector<Wall> &walls) {
 }
 
 
-std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline) {
+std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline, float hintAngle) {
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
@@ -174,6 +175,10 @@ std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline) {
     for (const auto& point: outline) {
         points.push_back(point.Start);
     }
+
+
+    glm::mat2 rotation(glm::cos(glm::radians(hintAngle)), glm::sin(glm::radians(hintAngle)),   // column 0
+           -glm::sin(glm::radians(hintAngle)), glm::cos(glm::radians(hintAngle)));
 
     int offset = 0;
     while (points.size() >= 3 && offset < points.size()) {
@@ -201,9 +206,9 @@ std::shared_ptr<Mesh> geo::Fill(std::vector<Segment> outline) {
         indices.push_back(vertices.size() + 1);
         indices.push_back(vertices.size() + 2);
 
-        vertices.push_back({start, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(start.x, start.z)});
-        vertices.push_back({middle, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(middle.x, middle.z)});
-        vertices.push_back({end, glm::vec3(0), glm::vec3(0,1.0,0), glm::vec2(end.x, end.z)});
+        vertices.push_back({start, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(start.x, start.z)});
+        vertices.push_back({middle, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(middle.x, middle.z)});
+        vertices.push_back({end, glm::vec3(0), glm::vec3(0,1.0,0), rotation * glm::vec2(end.x, end.z)});
         offset = 0;
     }
     return std::make_shared<Mesh>(vertices, indices);
@@ -285,6 +290,149 @@ std::vector<float> geo::GetIntersections(glm::vec3 point, glm::vec3 direction, s
 
     std::sort(intersections.begin(), intersections.end());
     return intersections;
+}
+
+BisectResult geo::BisectPolygon(const std::vector<Segment> &segments, Segment& bisector) {
+    std::vector<Segment> leftSide;
+    std::vector<Segment> rightSide;
+    std::vector<Segment> merged;
+
+    for (const auto & segment : segments) {
+        auto relativeStart = geo::Flatten(segment.Start - bisector.Start);
+        auto relativeEnd = geo::Flatten(segment.End - bisector.End);
+
+        auto startCross = geo::Cross(relativeStart, geo::Flatten(bisector.GetDirection()));
+        auto endCross = geo::Cross(relativeEnd, geo::Flatten(bisector.GetDirection()));
+
+        bool onBisector = glm::abs(startCross) < 1e-3 || glm::abs(endCross) < 1e-3;
+        if (onBisector) {
+            if (glm::sign(startCross + endCross) < 0)
+                leftSide.push_back(segment);
+            else
+                rightSide.push_back(segment);
+            merged.push_back(segment);
+            continue;
+        }
+
+        bool sameSide = glm::sign(startCross) == glm::sign(endCross);
+        if (sameSide) {
+            if (glm::sign(startCross) < 0)
+                leftSide.push_back(segment);
+            else
+                rightSide.push_back(segment);
+            merged.push_back(segment);
+            continue;
+        }
+
+        bool parallel;
+        glm::vec2 point;
+        geo::Intersection(bisector, segment, parallel, point);
+
+        Segment leftHalf(segment.Start, glm::vec3(point.x, segment.Start.y,point.y));
+        Segment rightHalf(glm::vec3(point.x, segment.Start.y,point.y), segment.End);
+        merged.push_back(leftHalf);
+        merged.push_back(rightHalf);
+
+        if (glm::sign(startCross) < 0) {
+            leftSide.push_back(leftHalf);
+            rightSide.push_back(rightHalf);
+        }
+        else {
+            leftSide.push_back(rightHalf);
+            rightSide.push_back(leftHalf);
+        }
+    }
+
+    return {leftSide, rightSide, merged};
+}
+
+
+std::vector<std::vector<Segment>> geo::JoinIntoRegions(const std::vector<Segment> &segments, Segment bisector) {
+    bool loop = true;
+    for (int i = 0; i < segments.size(); ++i) {
+        loop &= glm::distance(segments[i].GetEndFlat(), segments[(i + 1)%segments.size()].GetStartFlat()) < 1e-3f;
+    }
+
+    if (loop)
+        return {segments};
+
+    int left = 0;
+    for (const auto& segment : segments) {
+        left += GetSegmentSide(segment, bisector) ? 1 : -1;
+    }
+
+    glm::vec3 axis = bisector.GetDirection() * (left < 0 ? 1.0f : -1.0f);
+
+    int startSegmentIndex = 0;
+    for (int i = 0; i < segments.size(); ++i) {
+        if (glm::distance(segments[i].End, segments[(i + 1) % segments.size()].Start) > 1e-3) {
+            startSegmentIndex = i + 1;
+            break;
+        }
+    }
+
+    std::vector<std::vector<Segment>> chains;
+    std::vector<Segment> chain;
+    for (size_t i = 0; i < segments.size(); ++i) {
+        auto current  = segments[(startSegmentIndex + i) % segments.size()];
+        auto next = segments[(startSegmentIndex + i + 1) % segments.size()];
+
+        chain.push_back(current);
+        if (glm::distance(current.End, next.Start) > 1e-3) {
+            chains.push_back(chain);
+            chain.clear();
+        }
+    }
+
+    if (!chain.empty())
+        chains.push_back(chain);
+
+    struct Span {
+        float start;
+        float end;
+        std::vector<Segment> segments;
+    };
+
+    std::vector<Span> outerSpans;
+    std::vector<Span> innerSpans;
+
+    for (auto continuous : chains) {
+        auto start = continuous.front().Start - bisector.Start;
+        auto end = continuous.back().End - bisector.Start;
+
+        auto startDistance = glm::dot(start, axis);
+        auto endDistance = glm::dot(end, axis);
+
+        auto& span = startDistance < endDistance ? outerSpans : innerSpans;
+        span.push_back({
+            startDistance,
+            endDistance,
+            continuous
+        });
+    }
+
+    sort(outerSpans.begin(), outerSpans.end(), [](const Span& a, const Span& b){return a.start < b.start;});
+    sort(innerSpans.begin(), innerSpans.end(), [](const Span& a, const Span& b){return a.start > b.start;});
+
+    std::vector<std::vector<Segment>> weaved;
+    for (const auto& span : outerSpans) {
+        std::vector<Segment> weave = span.segments;
+
+        for (const auto& inner : innerSpans) {
+            if (span.start < inner.end && span.end > inner.start) {
+                weave.emplace_back(weave.back().End, inner.segments.front().Start);
+                weave.insert(weave.end(), inner.segments.begin(), inner.segments.end());
+            }
+        }
+
+        weave.emplace_back(
+            weave.back().End,
+            weave.front().Start
+        );
+        weaved.push_back(weave);
+    }
+
+    return weaved;
 }
 
 float geo::Angle(glm::vec3 a, glm::vec3 b) {

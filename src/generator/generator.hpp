@@ -34,7 +34,7 @@ public:
     ~Generator() = default;
 
     /**
-     * Updates building footprint (for now also triggers regeneration)
+     * Updates building footprint
      * @param footprint Building footprint
      */
     void SetFootprint(std::vector<glm::vec3> footprint);
